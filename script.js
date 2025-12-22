@@ -2465,7 +2465,13 @@ function initGame() {
     document.getElementById('currentPhase').textContent = '행성 배치';
 
     // 싱글 플레이 모드로 시작 - 자동으로 랜덤 배치 + 배치 완료
+    if (gameState.mode === 'singlePlay') {
+        // 먼저 보드를 숨김 상태로 설정
+        gameState.questionerBoardHidden = true;
+    }
+
     updateGameModeUI();
+
     if (gameState.mode === 'singlePlay') {
         setTimeout(() => {
             randomPlacement();
