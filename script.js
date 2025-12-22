@@ -2105,6 +2105,10 @@ function submitSolution() {
         return;
     }
 
+    // 시도 횟수 증가
+    gameState.laserCount++;
+    document.getElementById('laserCount').textContent = gameState.laserCount;
+
     // 정답 확인
     let correct = true;
 
@@ -2163,11 +2167,12 @@ function submitSolution() {
         resultDiv.innerHTML = `
             🎉 성공! 🎉<br>
             <div style="font-size: 0.5em; margin-top: 20px;">
-                총 레이저 발사 횟수: ${gameState.laserCount}회
+                총 시도 횟수: ${gameState.laserCount}회
             </div>
             ${gameState.mode === 'singlePlay' ? '<button id="restartBtn" class="btn btn-primary" style="margin-top: 20px; padding: 10px 30px; font-size: 0.5em;">다시하기</button>' : ''}
         `;
     } else {
+        // 실패 시 게임을 종료하지 않고 계속 진행
         resultDiv.innerHTML = `
             ❌ 실패 ❌<br>
             <div style="font-size: 0.4em; margin-top: 20px;">
@@ -2178,16 +2183,26 @@ function submitSolution() {
 
     document.body.appendChild(resultDiv);
 
-    // 싱글 플레이 모드에서는 자동 제거하지 않음
+    // 정답이 아닌 경우 1.5초 후 팝업 제거 (게임은 계속)
+    if (!correct) {
+        setTimeout(() => {
+            if (resultDiv && resultDiv.parentNode) {
+                resultDiv.remove();
+            }
+        }, 1500);
+        return; // 게임은 계속 진행
+    }
+
+    // 정답인 경우
     if (gameState.mode !== 'singlePlay') {
-        // 3초 후 자동 제거
+        // 연습 모드에서는 3초 후 자동 제거
         setTimeout(() => {
             if (resultDiv && resultDiv.parentNode) {
                 resultDiv.remove();
             }
         }, 3000);
-    } else if (correct) {
-        // 다시하기 버튼 이벤트 리스너 추가
+    } else {
+        // 싱글 플레이 모드에서는 다시하기 버튼 이벤트 리스너 추가
         const restartBtn = document.getElementById('restartBtn');
         if (restartBtn) {
             restartBtn.addEventListener('click', () => {
@@ -2272,7 +2287,8 @@ function restartGame() {
     gameState.laserHistory = [];
     gameState.selectedPlanet = null;
     gameState.selectedPosition = null;
-    gameState.questionerBoardHidden = false;
+    // 싱글 플레이 모드면 숨김 상태 유지
+    gameState.questionerBoardHidden = gameState.mode === 'singlePlay';
     gameState.planetRotations = {
         'medium-jupiter': 0,
         'large-saturn': 0
@@ -2289,12 +2305,12 @@ function restartGame() {
 
     // 싱글 플레이 모드면 자동으로 랜덤 배치 + 배치 완료
     if (gameState.mode === 'singlePlay') {
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             randomPlacement();
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 confirmSetup();
-            }, 100);
-        }, 100);
+            });
+        });
     }
 }
 
@@ -2460,25 +2476,25 @@ function setupEventListeners() {
 
 // 게임 초기화
 function initGame() {
+    // 싱글 플레이 모드일 때는 보드를 초기화하기 전에 숨김 상태로 설정
+    if (gameState.mode === 'singlePlay') {
+        gameState.questionerBoardHidden = true;
+    }
+
     initializeBoards();
     setupEventListeners();
     document.getElementById('currentPhase').textContent = '행성 배치';
 
-    // 싱글 플레이 모드로 시작 - 자동으로 랜덤 배치 + 배치 완료
-    if (gameState.mode === 'singlePlay') {
-        // 먼저 보드를 숨김 상태로 설정
-        gameState.questionerBoardHidden = true;
-    }
-
     updateGameModeUI();
 
     if (gameState.mode === 'singlePlay') {
-        setTimeout(() => {
+        // 즉시 실행하지 않고 다음 이벤트 루프에서 실행
+        requestAnimationFrame(() => {
             randomPlacement();
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 confirmSetup();
-            }, 100);
-        }, 100);
+            });
+        });
     }
 }
 
@@ -2487,11 +2503,17 @@ window.addEventListener('DOMContentLoaded', initGame);
 
 // 화면 크기 변경 시 보드 다시 렌더링 (모바일 회전 등)
 let resizeTimer;
+let lastWidth = window.innerWidth;
 window.addEventListener('resize', () => {
     // 디바운스: 리사이즈가 끝난 후에만 렌더링
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-        renderBoard('explorerBoard');
-        renderBoard('questionerBoard');
-    }, 250);
+        const currentWidth = window.innerWidth;
+        // 너비가 실제로 변경되었을 때만 렌더링 (모바일 스크롤로 인한 세로 크기 변경 무시)
+        if (Math.abs(currentWidth - lastWidth) > 10) {
+            lastWidth = currentWidth;
+            renderBoard('explorerBoard');
+            renderBoard('questionerBoard');
+        }
+    }, 500); // debounce 시간 증가
 });
