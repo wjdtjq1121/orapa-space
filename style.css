@@ -79,16 +79,82 @@ header h1 {
     font-size: 1em;
 }
 
-.game-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
+/* 데스크톱: 탐험가와 질문자 보드를 나란히 배치 */
+@media (min-width: 1201px) {
+    .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    header {
+        grid-column: 1 / -1;
+    }
+
+    .game-info {
+        grid-column: 1 / -1;
+    }
+
+    .explorer-section {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    .questioner-section {
+        grid-column: 2;
+        grid-row: 3;
+    }
+
+    .planet-panel,
+    .laser-panel,
+    .history-panel,
+    .color-mixing-panel,
+    .debug-panel {
+        grid-column: 1 / -1;
+    }
 }
 
+/* 모바일 레이아웃 순서 조정 */
 @media (max-width: 1200px) {
-    .game-container {
-        grid-template-columns: 1fr;
+    .container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    header {
+        order: 1;
+    }
+
+    .game-info {
+        order: 2;
+    }
+
+    .explorer-section {
+        order: 3;
+    }
+
+    .planet-panel {
+        order: 4;
+    }
+
+    .laser-panel {
+        order: 5;
+    }
+
+    .questioner-section {
+        order: 6;
+    }
+
+    .history-panel {
+        order: 7;
+    }
+
+    .color-mixing-panel {
+        order: 8;
+    }
+
+    .debug-panel {
+        order: 9;
     }
 }
 
