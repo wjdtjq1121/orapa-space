@@ -1,7 +1,7 @@
 // 게임 상태 관리
 const gameState = {
     phase: 'setup', // setup, playing, finished
-    mode: 'practice',
+    mode: 'singlePlay',
     selectedPlanet: null,
     selectedPosition: null, // 선택된 위치
     planetRotations: {
@@ -12,7 +12,8 @@ const gameState = {
     laserCount: 0,
     explorerBoard: Array(7).fill(null).map(() => Array(11).fill(null)),
     questionerBoard: Array(7).fill(null).map(() => Array(11).fill(null)),
-    laserHistory: []
+    laserHistory: [],
+    questionerBoardHidden: false // 싱글 플레이 모드에서 정답 보드 숨김 여부
 };
 
 // 현재 화면 크기에 따른 셀 크기 계산
@@ -694,6 +695,25 @@ function renderBoard(boardId) {
             cell.classList.remove('has-planet');
 
             const planetData = boardData[row][col];
+
+            // 싱글 플레이 모드에서 질문자 보드를 물음표로 가리기
+            if (isQuestioner && gameState.mode === 'singlePlay' && gameState.questionerBoardHidden) {
+                const hiddenMarker = document.createElement('div');
+                hiddenMarker.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: ${getCellSize() * 0.6}px;
+                    color: rgba(255, 255, 255, 0.3);
+                    user-select: none;
+                `;
+                hiddenMarker.textContent = '?';
+                cell.appendChild(hiddenMarker);
+                continue;
+            }
+
             if (planetData) {
                 cell.classList.add('has-planet');
 
@@ -2069,10 +2089,13 @@ function confirmSetup() {
     // 전체 레이저 테스트 표시
     displayAllLaserTests();
 
-    alert('배치가 완료되었습니다! 이제 레이저를 발사하여 행성 위치를 추론하세요.');
+    // 싱글 플레이 모드가 아닐 때만 알림 표시
+    if (gameState.mode !== 'singlePlay') {
+        alert('배치가 완료되었습니다! 이제 레이저를 발사하여 행성 위치를 추론하세요.');
+    }
 
-    // 질문자 보드 숨기기 옵션 (실제 게임에서는)
-    // document.getElementById('questionerBoard').style.opacity = '0.3';
+    // UI 업데이트
+    updateGameModeUI();
 }
 
 // 솔루션 제출
@@ -2130,11 +2153,19 @@ function submitSolution() {
     if (correct) {
         gameState.phase = 'finished';
         document.getElementById('currentPhase').textContent = '게임 종료 - 승리!';
+
+        // 싱글 플레이 모드에서는 정답 공개
+        if (gameState.mode === 'singlePlay') {
+            gameState.questionerBoardHidden = false;
+            renderBoard('questionerBoard');
+        }
+
         resultDiv.innerHTML = `
             🎉 성공! 🎉<br>
             <div style="font-size: 0.5em; margin-top: 20px;">
                 총 레이저 발사 횟수: ${gameState.laserCount}회
             </div>
+            ${gameState.mode === 'singlePlay' ? '<button id="restartBtn" class="btn btn-primary" style="margin-top: 20px; padding: 10px 30px; font-size: 0.5em;">다시하기</button>' : ''}
         `;
     } else {
         resultDiv.innerHTML = `
@@ -2147,12 +2178,124 @@ function submitSolution() {
 
     document.body.appendChild(resultDiv);
 
-    // 3초 후 자동 제거
-    setTimeout(() => {
-        if (resultDiv && resultDiv.parentNode) {
-            resultDiv.remove();
+    // 싱글 플레이 모드에서는 자동 제거하지 않음
+    if (gameState.mode !== 'singlePlay') {
+        // 3초 후 자동 제거
+        setTimeout(() => {
+            if (resultDiv && resultDiv.parentNode) {
+                resultDiv.remove();
+            }
+        }, 3000);
+    } else if (correct) {
+        // 다시하기 버튼 이벤트 리스너 추가
+        const restartBtn = document.getElementById('restartBtn');
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => {
+                resultDiv.remove();
+                restartGame();
+            });
         }
-    }, 3000);
+    }
+}
+
+// 포기하기
+function giveUp() {
+    if (gameState.mode !== 'singlePlay' || gameState.phase !== 'playing') {
+        return;
+    }
+
+    const confirmed = confirm('정말 포기하시겠습니까? 정답이 공개됩니다.');
+    if (!confirmed) return;
+
+    // 정답 공개
+    gameState.questionerBoardHidden = false;
+    renderBoard('questionerBoard');
+
+    gameState.phase = 'finished';
+    document.getElementById('currentPhase').textContent = '게임 종료 - 포기';
+
+    // 포기하기 버튼 숨기기
+    document.getElementById('giveUpBtn').style.display = 'none';
+
+    // 포기 메시지 표시
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'result-popup';
+
+    const isMobile = window.innerWidth <= 480;
+    const fontSize = isMobile ? '2em' : '3em';
+    const padding = isMobile ? '30px 40px' : '50px 80px';
+
+    resultDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(231, 76, 60, 0.98);
+        color: white;
+        padding: ${padding};
+        border-radius: 20px;
+        font-size: ${fontSize};
+        font-weight: bold;
+        z-index: 20000;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        animation: resultPopup 0.5s ease-out;
+    `;
+
+    resultDiv.innerHTML = `
+        포기했습니다<br>
+        <div style="font-size: 0.5em; margin-top: 20px;">
+            정답이 공개되었습니다
+        </div>
+        <button id="restartBtn" class="btn btn-primary" style="margin-top: 20px; padding: 10px 30px; font-size: 0.5em;">다시하기</button>
+    `;
+
+    document.body.appendChild(resultDiv);
+
+    // 다시하기 버튼 이벤트 리스너
+    const restartBtn = document.getElementById('restartBtn');
+    if (restartBtn) {
+        restartBtn.addEventListener('click', () => {
+            resultDiv.remove();
+            restartGame();
+        });
+    }
+}
+
+// 게임 재시작
+function restartGame() {
+    // 게임 상태 초기화
+    gameState.phase = 'setup';
+    gameState.laserCount = 0;
+    gameState.explorerBoard = Array(7).fill(null).map(() => Array(11).fill(null));
+    gameState.questionerBoard = Array(7).fill(null).map(() => Array(11).fill(null));
+    gameState.laserHistory = [];
+    gameState.selectedPlanet = null;
+    gameState.selectedPosition = null;
+    gameState.questionerBoardHidden = false;
+    gameState.planetRotations = {
+        'medium-jupiter': 0,
+        'large-saturn': 0
+    };
+
+    // UI 초기화
+    document.getElementById('currentPhase').textContent = '행성 배치';
+    document.getElementById('laserCount').textContent = '0';
+    document.getElementById('laserHistory').innerHTML = '';
+
+    // 보드 렌더링
+    renderBoard('explorerBoard');
+    renderBoard('questionerBoard');
+
+    // 싱글 플레이 모드면 자동으로 랜덤 배치 + 배치 완료
+    if (gameState.mode === 'singlePlay') {
+        setTimeout(() => {
+            randomPlacement();
+            setTimeout(() => {
+                confirmSetup();
+            }, 100);
+        }, 100);
+    }
 }
 
 // 행성 선택
@@ -2241,6 +2384,49 @@ function setupLaserButtons() {
     }
 }
 
+// 게임 모드에 따라 UI 업데이트
+function updateGameModeUI() {
+    const isSinglePlay = gameState.mode === 'singlePlay';
+
+    // 질문자 보드 제목 변경
+    const questionerTitle = document.getElementById('questionerBoardTitle');
+    const questionerDesc = document.getElementById('questionerBoardDesc');
+    if (isSinglePlay) {
+        questionerTitle.textContent = 'AI 문제';
+        questionerDesc.textContent = '레이저로 행성 위치를 추론하세요';
+    } else {
+        questionerTitle.textContent = '질문자 보드';
+        questionerDesc.textContent = '행성을 배치하세요';
+    }
+
+    // 질문자 보드 컨트롤 버튼 표시/숨김
+    const questionerControls = document.getElementById('questionerControls');
+    questionerControls.style.display = isSinglePlay ? 'none' : 'flex';
+
+    // 디버그 패널 표시/숨김
+    const debugPanel1 = document.getElementById('debugPanel1');
+    const debugPanel2 = document.getElementById('debugPanel2');
+    debugPanel1.style.display = isSinglePlay ? 'none' : 'block';
+    debugPanel2.style.display = isSinglePlay ? 'none' : 'block';
+
+    // 포기하기 버튼 표시/숨김
+    const giveUpBtn = document.getElementById('giveUpBtn');
+    if (isSinglePlay && gameState.phase === 'playing') {
+        giveUpBtn.style.display = 'inline-block';
+    } else {
+        giveUpBtn.style.display = 'none';
+    }
+
+    // 싱글 플레이 모드에서 질문자 보드 숨김 상태 업데이트
+    if (isSinglePlay && gameState.phase === 'playing') {
+        gameState.questionerBoardHidden = true;
+        renderBoard('questionerBoard');
+    } else {
+        gameState.questionerBoardHidden = false;
+        renderBoard('questionerBoard');
+    }
+}
+
 // 이벤트 리스너 설정
 function setupEventListeners() {
     document.getElementById('randomPlacements').addEventListener('click', randomPlacement);
@@ -2252,7 +2438,21 @@ function setupEventListeners() {
 
     document.getElementById('gameMode').addEventListener('change', (e) => {
         gameState.mode = e.target.value;
+        updateGameModeUI();
+
+        // 싱글 플레이로 전환 시 자동 설정
+        if (gameState.mode === 'singlePlay' && gameState.phase === 'setup') {
+            setTimeout(() => {
+                randomPlacement();
+                setTimeout(() => {
+                    confirmSetup();
+                }, 100);
+            }, 100);
+        }
     });
+
+    // 포기하기 버튼 이벤트 리스너
+    document.getElementById('giveUpBtn').addEventListener('click', giveUp);
 
     setupPlanetSelector();
     setupLaserButtons();
@@ -2263,6 +2463,17 @@ function initGame() {
     initializeBoards();
     setupEventListeners();
     document.getElementById('currentPhase').textContent = '행성 배치';
+
+    // 싱글 플레이 모드로 시작 - 자동으로 랜덤 배치 + 배치 완료
+    updateGameModeUI();
+    if (gameState.mode === 'singlePlay') {
+        setTimeout(() => {
+            randomPlacement();
+            setTimeout(() => {
+                confirmSetup();
+            }, 100);
+        }, 100);
+    }
 }
 
 // 페이지 로드 시 게임 시작
