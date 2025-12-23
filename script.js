@@ -1,6 +1,9 @@
+// 버전 정보
+const GAME_VERSION = "1.0.0";
+
 // 게임 상태 관리
 const gameState = {
-    phase: 'setup', // setup, playing, finished
+    phase: 'waiting', // waiting, setup, playing, finished
     mode: 'singlePlay',
     selectedPlanet: null,
     selectedPosition: null, // 선택된 위치
@@ -2279,39 +2282,8 @@ function giveUp() {
 
 // 게임 재시작
 function restartGame() {
-    // 게임 상태 초기화
-    gameState.phase = 'setup';
-    gameState.laserCount = 0;
-    gameState.explorerBoard = Array(7).fill(null).map(() => Array(11).fill(null));
-    gameState.questionerBoard = Array(7).fill(null).map(() => Array(11).fill(null));
-    gameState.laserHistory = [];
-    gameState.selectedPlanet = null;
-    gameState.selectedPosition = null;
-    // 싱글 플레이 모드면 숨김 상태 유지
-    gameState.questionerBoardHidden = gameState.mode === 'singlePlay';
-    gameState.planetRotations = {
-        'medium-jupiter': 0,
-        'large-saturn': 0
-    };
-
-    // UI 초기화
-    document.getElementById('currentPhase').textContent = '행성 배치';
-    document.getElementById('laserCount').textContent = '0';
-    document.getElementById('laserHistory').innerHTML = '';
-
-    // 보드 렌더링
-    renderBoard('explorerBoard');
-    renderBoard('questionerBoard');
-
-    // 싱글 플레이 모드면 자동으로 랜덤 배치 + 배치 완료
-    if (gameState.mode === 'singlePlay') {
-        requestAnimationFrame(() => {
-            randomPlacement();
-            requestAnimationFrame(() => {
-                confirmSetup();
-            });
-        });
-    }
+    // startGame 함수를 재사용
+    startGame();
 }
 
 // 행성 선택
@@ -2470,31 +2442,81 @@ function setupEventListeners() {
     // 포기하기 버튼 이벤트 리스너
     document.getElementById('giveUpBtn').addEventListener('click', giveUp);
 
+    // 게임 시작 버튼 이벤트 리스너
+    document.getElementById('startGameBtn').addEventListener('click', startGame);
+
     setupPlanetSelector();
     setupLaserButtons();
 }
 
-// 게임 초기화
-function initGame() {
-    // 싱글 플레이 모드일 때는 보드를 초기화하기 전에 숨김 상태로 설정
-    if (gameState.mode === 'singlePlay') {
-        gameState.questionerBoardHidden = true;
+// 게임 시작
+function startGame() {
+    // 게임 시작 버튼 숨기기
+    const startSection = document.getElementById('startGameSection');
+    if (startSection) {
+        startSection.style.display = 'none';
     }
 
-    initializeBoards();
-    setupEventListeners();
-    document.getElementById('currentPhase').textContent = '행성 배치';
+    // 게임 상태 초기화
+    gameState.phase = 'setup';
+    gameState.laserCount = 0;
+    gameState.explorerBoard = Array(7).fill(null).map(() => Array(11).fill(null));
+    gameState.questionerBoard = Array(7).fill(null).map(() => Array(11).fill(null));
+    gameState.laserHistory = [];
+    gameState.selectedPlanet = null;
+    gameState.selectedPosition = null;
+    gameState.questionerBoardHidden = gameState.mode === 'singlePlay';
+    gameState.planetRotations = {
+        'medium-jupiter': 0,
+        'large-saturn': 0
+    };
 
+    // UI 초기화
+    document.getElementById('currentPhase').textContent = '행성 배치';
+    document.getElementById('laserCount').textContent = '0';
+    document.getElementById('laserHistory').innerHTML = '';
+
+    // 보드 렌더링
+    renderBoard('explorerBoard');
+    renderBoard('questionerBoard');
+
+    // UI 업데이트
     updateGameModeUI();
 
+    // 싱글 플레이 모드면 자동으로 랜덤 배치 + 배치 완료
     if (gameState.mode === 'singlePlay') {
-        // 즉시 실행하지 않고 다음 이벤트 루프에서 실행
         requestAnimationFrame(() => {
             randomPlacement();
             requestAnimationFrame(() => {
                 confirmSetup();
             });
         });
+    }
+}
+
+// 게임 초기화
+function initGame() {
+    initializeBoards();
+    setupEventListeners();
+
+    // 버전 정보 업데이트
+    updateGameVersion();
+
+    // 초기 상태: 게임 대기 중
+    document.getElementById('currentPhase').textContent = '게임 대기 중';
+
+    // 게임 시작 버튼 표시
+    const startSection = document.getElementById('startGameSection');
+    if (startSection) {
+        startSection.style.display = 'block';
+    }
+}
+
+// 버전 정보 업데이트
+function updateGameVersion() {
+    const versionElement = document.getElementById('versionInfo');
+    if (versionElement) {
+        versionElement.textContent = `v${GAME_VERSION}`;
     }
 }
 

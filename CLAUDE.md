@@ -1,0 +1,199 @@
+# ORAPA SPACE - 개발 가이드
+
+## 현재 버전
+**Version: 1.0.0** (2025-12-23)
+
+---
+
+## 버전 히스토리
+
+### v1.0.0 (2025-12-23)
+- 싱글 플레이 모드 추가
+- AI 문제 보드 물음표로 가리기 기능
+- 포기하기 버튼 추가
+- 게임 종료 모달창 및 다시하기 버튼 구현
+- 시도 횟수 시스템 개선 (레이저 발사 + 솔루션 제출)
+- 솔루션 제출 실패 시 게임 계속 진행
+- 모바일 스크롤 최적화
+- 게임 시작 버튼 추가
+
+### v0.9.0 (이전 버전)
+- 연습 모드
+- 2인 대전 모드
+- 기본 게임 메커니즘
+
+---
+
+## 프로젝트 구조
+
+```
+orapa-space/
+├── index.html          # 메인 HTML 파일
+├── script.js           # 게임 로직 (2500+ 줄)
+├── style.css           # 스타일시트
+└── CLAUDE.md          # 이 파일 (개발 가이드)
+```
+
+---
+
+## 게임 모드
+
+### 1. 싱글 플레이 (기본 모드)
+- 자동으로 랜덤 문제 생성
+- AI 문제 보드가 물음표로 가려짐
+- 포기하기 버튼 제공
+- 디버그 패널 숨김
+- 모달창으로 게임 종료 및 다시하기
+
+### 2. 연습 모드
+- 수동으로 행성 배치
+- 랜덤 배치, 초기화, 배치 완료 버튼 제공
+- 디버그 패널 표시
+- 기존 기능 그대로 유지
+
+---
+
+## 주요 게임 상태 (gameState)
+
+```javascript
+{
+    phase: 'setup' | 'playing' | 'finished',
+    mode: 'singlePlay' | 'practice',
+    selectedPlanet: null | string,
+    selectedPosition: null | number | string,
+    planetRotations: { 'medium-jupiter': 0-270, 'large-saturn': 0-270 },
+    pendingPlacement: null | object,
+    laserCount: number,  // 시도 횟수
+    explorerBoard: Array[7][11],
+    questionerBoard: Array[7][11],
+    laserHistory: Array,
+    questionerBoardHidden: boolean  // 싱글 플레이에서 정답 숨김
+}
+```
+
+---
+
+## 핵심 함수
+
+### 게임 초기화
+- `initGame()` - 게임 전체 초기화
+- `initializeBoards()` - 보드 생성
+- `restartGame()` - 게임 재시작
+
+### 게임 플레이
+- `randomPlacement()` - 랜덤 행성 배치
+- `confirmSetup()` - 배치 완료
+- `submitSolution()` - 솔루션 제출
+- `giveUp()` - 포기하기
+- `fireLaserFromButton()` - 레이저 발사
+
+### UI 관리
+- `updateGameModeUI()` - 모드별 UI 업데이트
+- `renderBoard(boardId)` - 보드 렌더링
+- `updateGameVersion()` - 버전 정보 업데이트
+
+---
+
+## 행성 타입 (PLANETS)
+
+1. **small-red** - 작은 빨강 (1x1, 원형)
+2. **small-orange** - 중간 빨강 (2x2, 마름모)
+3. **small-blue** - 중간 파랑 (2x2, 마름모)
+4. **medium-earth** - 중간 노랑 (3x3, 팔각형)
+5. **medium-jupiter** - 큰 흰색 (4x2, 사다리꼴, 회전 가능)
+6. **large-saturn** - 큰 링 흰색 (4x2, 링, 회전 가능)
+
+---
+
+## 버전 업데이트 방법
+
+### 1. CLAUDE.md 파일 업데이트
+- 버전 번호 변경 (상단 "현재 버전")
+- 버전 히스토리에 새 버전 추가
+- 주요 변경사항 기록
+
+### 2. script.js에서 버전 업데이트
+```javascript
+const GAME_VERSION = "1.0.0";  // 이 값을 변경
+```
+
+### 3. 자동 반영
+- `updateGameVersion()` 함수가 자동으로 HTML 업데이트
+
+---
+
+## 알려진 이슈 및 해결 방법
+
+### 이슈 1: 초기 로드 시 정답 보임
+**해결**:
+- `gameState.questionerBoardHidden = true`를 보드 초기화 전에 설정
+- `requestAnimationFrame` 사용으로 렌더링 순서 보장
+
+### 이슈 2: 모바일 스크롤 버벅임
+**해결**:
+- resize 이벤트에서 너비만 체크 (세로 변경 무시)
+- debounce 시간 500ms로 증가
+- 10px 미만 변경 무시
+
+### 이슈 3: 솔루션 제출 실패 시 게임 종료
+**해결**:
+- 실패 시 게임 종료하지 않고 계속 진행
+- 시도 횟수만 증가
+- 1.5초 메시지 표시 후 자동 제거
+
+---
+
+## 개발 팁
+
+### 디버깅
+- 연습 모드에서 디버그 패널 확인
+- `displayPlanetDebugInfo()` - 행성 배치 정보
+- `displayAllLaserTests()` - 전체 레이저 테스트 (36가지)
+
+### 모바일 테스트
+- Chrome DevTools 모바일 에뮬레이터 사용
+- 실제 기기에서 스크롤 및 터치 테스트 필수
+
+### 성능 최적화
+- `requestAnimationFrame` 사용
+- debounce/throttle 적용
+- 불필요한 리렌더링 방지
+
+---
+
+## Git 커밋 메시지 규칙
+
+```
+<type>: <subject>
+
+<body>
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Type 예시:**
+- feat: 새로운 기능
+- fix: 버그 수정
+- refactor: 리팩토링
+- perf: 성능 개선
+- docs: 문서 수정
+
+---
+
+## 연락처 및 리소스
+
+- GitHub: https://github.com/wjdtjq1121/orapa-space
+- Live Demo: https://wjdtjq1121.github.io/orapa-space/
+
+---
+
+## TODO (향후 개선 사항)
+
+- [ ] 난이도 선택 기능
+- [ ] 힌트 시스템
+- [ ] 사운드 효과
+- [ ] 리더보드
+- [ ] 문제 공유 기능
+- [ ] 다크 모드

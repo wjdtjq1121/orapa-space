@@ -11,6 +11,7 @@
         <header>
             <h1>🌌 ORAPA SPACE 🌌</h1>
             <p class="subtitle">레이저로 숨겨진 행성을 찾아라!</p>
+            <div class="version-info" id="versionInfo">v1.0.0</div>
         </header>
 
         <div class="game-info">
@@ -23,12 +24,18 @@
             </div>
             <div class="info-panel">
                 <h3>현재 단계</h3>
-                <p id="currentPhase">행성 배치</p>
+                <p id="currentPhase">게임 대기 중</p>
             </div>
             <div class="info-panel">
                 <h3>시도 횟수</h3>
                 <p id="laserCount">0</p>
             </div>
+        </div>
+
+        <!-- 게임 시작 버튼 -->
+        <div class="start-game-section" id="startGameSection">
+            <button id="startGameBtn" class="btn btn-primary btn-large">🚀 게임 시작</button>
+            <p class="start-game-desc">버튼을 눌러 새로운 문제를 시작하세요</p>
         </div>
 
         <!-- 플레이어 1 보드 (탐험가) -->

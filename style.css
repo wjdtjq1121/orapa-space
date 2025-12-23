@@ -1500,3 +1500,72 @@ header h1 {
         grid-template-columns: 1fr;
     }
 }
+
+/* 버전 정보 */
+.version-info {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 게임 시작 섹션 */
+.start-game-section {
+    text-align: center;
+    padding: 40px 20px;
+    margin: 30px auto;
+    max-width: 600px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-large {
+    font-size: 1.5em !important;
+    padding: 20px 50px !important;
+    border-radius: 15px !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-large:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+}
+
+.btn-large:active {
+    transform: translateY(-1px);
+}
+
+.start-game-desc {
+    margin-top: 15px;
+    color: #ecf0f1;
+    font-size: 1.1em;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .version-info {
+        top: 10px;
+        right: 10px;
+        font-size: 0.75em;
+        padding: 6px 12px;
+    }
+
+    .btn-large {
+        font-size: 1.2em !important;
+        padding: 15px 35px !important;
+    }
+
+    .start-game-desc {
+        font-size: 0.9em;
+    }
+}
