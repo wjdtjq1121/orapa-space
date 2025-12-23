@@ -2165,6 +2165,8 @@ function submitSolution() {
         if (gameState.mode === 'singlePlay') {
             gameState.questionerBoardHidden = false;
             renderBoard('questionerBoard');
+            // 포기하기 버튼 숨기기
+            document.getElementById('giveUpBtn').style.display = 'none';
         }
 
         resultDiv.innerHTML = `
@@ -2172,12 +2174,11 @@ function submitSolution() {
             <div style="font-size: 0.5em; margin-top: 20px;">
                 총 시도 횟수: ${gameState.laserCount}회
             </div>
-            ${gameState.mode === 'singlePlay' ? '<button id="restartBtn" class="btn btn-primary" style="margin-top: 20px; padding: 10px 30px; font-size: 0.5em;">다시하기</button>' : ''}
         `;
     } else {
         // 실패 시 게임을 종료하지 않고 계속 진행
         resultDiv.innerHTML = `
-            ❌ 실패 ❌<br>
+            <div style="white-space: nowrap;">❌ 실패 ❌</div>
             <div style="font-size: 0.4em; margin-top: 20px;">
                 다시 시도하세요!
             </div>
@@ -2196,24 +2197,16 @@ function submitSolution() {
         return; // 게임은 계속 진행
     }
 
-    // 정답인 경우
-    if (gameState.mode !== 'singlePlay') {
-        // 연습 모드에서는 3초 후 자동 제거
-        setTimeout(() => {
-            if (resultDiv && resultDiv.parentNode) {
-                resultDiv.remove();
-            }
-        }, 3000);
-    } else {
-        // 싱글 플레이 모드에서는 다시하기 버튼 이벤트 리스너 추가
-        const restartBtn = document.getElementById('restartBtn');
-        if (restartBtn) {
-            restartBtn.addEventListener('click', () => {
-                resultDiv.remove();
-                restartGame();
-            });
+    // 정답인 경우 - 3초 후 모달 제거
+    setTimeout(() => {
+        if (resultDiv && resultDiv.parentNode) {
+            resultDiv.remove();
         }
-    }
+        // 싱글 플레이 모드에서는 다시하기 버튼 표시
+        if (gameState.mode === 'singlePlay') {
+            showRestartButton();
+        }
+    }, 3000);
 }
 
 // 포기하기
@@ -2235,7 +2228,7 @@ function giveUp() {
     // 포기하기 버튼 숨기기
     document.getElementById('giveUpBtn').style.display = 'none';
 
-    // 포기 메시지 표시
+    // 포기 메시지 표시 (3초만)
     const resultDiv = document.createElement('div');
     resultDiv.className = 'result-popup';
 
@@ -2265,18 +2258,31 @@ function giveUp() {
         <div style="font-size: 0.5em; margin-top: 20px;">
             정답이 공개되었습니다
         </div>
-        <button id="restartBtn" class="btn btn-primary" style="margin-top: 20px; padding: 10px 30px; font-size: 0.5em;">다시하기</button>
     `;
 
     document.body.appendChild(resultDiv);
 
-    // 다시하기 버튼 이벤트 리스너
-    const restartBtn = document.getElementById('restartBtn');
-    if (restartBtn) {
-        restartBtn.addEventListener('click', () => {
+    // 3초 후 모달 제거하고 다시하기 버튼 표시
+    setTimeout(() => {
+        if (resultDiv && resultDiv.parentNode) {
             resultDiv.remove();
-            restartGame();
-        });
+        }
+        showRestartButton();
+    }, 3000);
+}
+
+// 다시하기 버튼 표시 (상단 게임 시작 위치)
+function showRestartButton() {
+    const startSection = document.getElementById('startGameSection');
+    if (startSection) {
+        startSection.innerHTML = `
+            <button id="restartGameBtn" class="btn btn-primary btn-large">🔄 다시하기</button>
+            <p class="start-game-desc">버튼을 눌러 새로운 문제를 시작하세요</p>
+        `;
+        startSection.style.display = 'block';
+
+        // 다시하기 버튼 이벤트 리스너
+        document.getElementById('restartGameBtn').addEventListener('click', startGame);
     }
 }
 
@@ -2465,6 +2471,7 @@ function startGame() {
     gameState.laserHistory = [];
     gameState.selectedPlanet = null;
     gameState.selectedPosition = null;
+    // 중요: 싱글 플레이 모드면 먼저 숨김 상태로 설정
     gameState.questionerBoardHidden = gameState.mode === 'singlePlay';
     gameState.planetRotations = {
         'medium-jupiter': 0,
@@ -2476,21 +2483,20 @@ function startGame() {
     document.getElementById('laserCount').textContent = '0';
     document.getElementById('laserHistory').innerHTML = '';
 
-    // 보드 렌더링
+    // 탐험가 보드만 렌더링 (질문자 보드는 나중에)
     renderBoard('explorerBoard');
-    renderBoard('questionerBoard');
 
     // UI 업데이트
     updateGameModeUI();
 
     // 싱글 플레이 모드면 자동으로 랜덤 배치 + 배치 완료
     if (gameState.mode === 'singlePlay') {
-        requestAnimationFrame(() => {
-            randomPlacement();
-            requestAnimationFrame(() => {
-                confirmSetup();
-            });
-        });
+        // 즉시 실행 - requestAnimationFrame 제거
+        randomPlacement();
+        confirmSetup();
+    } else {
+        // 연습 모드에서는 빈 질문자 보드 렌더링
+        renderBoard('questionerBoard');
     }
 }
 
