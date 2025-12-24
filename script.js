@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.5.0";
+const GAME_VERSION = "1.5.1";
 
 // 게임 상태 관리
 const gameState = {
@@ -1184,10 +1184,13 @@ function calculateLaserPath(direction, startRow, startCol, color) {
                 // 인접한 4방향에 블랙홀이 있는지 확인
                 const adjacentBlackHole = checkAdjacentBlackHole(currentRow, currentCol);
                 if (adjacentBlackHole) {
+                    console.log(`블랙홀 굴절 발생: (${currentRow}, ${currentCol}), 블랙홀 방향: ${adjacentBlackHole.direction}`);
+                    console.log(`굴절 전 방향: (${dirRow}, ${dirCol})`);
                     // 블랙홀 방향으로 90도 굴절
                     const newDirection = bendTowardBlackHole(dirRow, dirCol, adjacentBlackHole);
                     dirRow = newDirection.dirRow;
                     dirCol = newDirection.dirCol;
+                    console.log(`굴절 후 방향: (${dirRow}, ${dirCol})`);
                     hasRefracted = true;
                     path[path.length - 1].type = 'refract'; // 굴절 표시
                 }
@@ -2151,8 +2154,8 @@ function displayAllLaserTests() {
         const testItem = document.createElement('div');
         testItem.className = 'laser-test-item';
 
-        if (result.status === 'blocked') {
-            testItem.classList.add('blocked');
+        if (result.status === 'blocked' || result.status === 'disappeared' || result.status === 'trapped') {
+            testItem.classList.add(result.status);
         }
 
         const header = document.createElement('div');
@@ -2165,6 +2168,12 @@ function displayAllLaserTests() {
         if (result.status === 'blocked') {
             output.textContent = '→ 차단됨';
             output.style.color = '#e74c3c';
+        } else if (result.status === 'disappeared') {
+            output.textContent = '→ 소멸 (블랙홀) 🕳️';
+            output.style.color = '#000000';
+        } else if (result.status === 'trapped') {
+            output.textContent = '→ 포획 (블랙홀) ⚠️';
+            output.style.color = '#f39c12';
         } else {
             const exitPoint = result.path[result.path.length - 1];
             const exitLabel = getPositionLabel(result.exitDirection, exitPoint.row, exitPoint.col);
@@ -2177,6 +2186,10 @@ function displayAllLaserTests() {
 
         if (result.status === 'blocked') {
             description.textContent = '레이저가 행성에 막혔습니다.';
+        } else if (result.status === 'disappeared') {
+            description.textContent = '레이저가 블랙홀에 흡수되었습니다.';
+        } else if (result.status === 'trapped') {
+            description.textContent = '레이저가 블랙홀에 포획되었습니다 (무한 루프).';
         } else {
             // 경로 설명 생성
             const pathDescription = [];
