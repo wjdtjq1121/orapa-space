@@ -61,6 +61,29 @@
             </div>
         </div>
 
+        <!-- 좌표 질문 패널 -->
+        <div class="coordinate-panel">
+            <h3>좌표 질문</h3>
+            <p class="panel-desc">특정 격자 칸의 내용물을 직접 질문할 수 있습니다</p>
+
+            <div class="coordinate-section">
+                <h4>1. 행 선택 (A-G)</h4>
+                <div class="coordinate-buttons" id="rowButtons"></div>
+            </div>
+
+            <div class="coordinate-section">
+                <h4>2. 열 선택 (1-11)</h4>
+                <div class="coordinate-buttons" id="colButtons"></div>
+            </div>
+
+            <div class="coordinate-section">
+                <h4>3. 질문하기</h4>
+                <button id="askCoordinateBtn" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2em;">❓ 좌표 질문하기</button>
+            </div>
+
+            <div id="coordinateResult" class="coordinate-result"></div>
+        </div>
+
         <!-- 행성 선택 패널 -->
         <div class="planet-panel">
             <h3>행성 선택</h3>
@@ -130,29 +153,6 @@
             </div>
 
             <div id="laserResult" class="laser-result"></div>
-        </div>
-
-        <!-- 좌표 질문 패널 -->
-        <div class="coordinate-panel">
-            <h3>좌표 질문</h3>
-            <p class="panel-desc">특정 격자 칸의 내용물을 직접 질문할 수 있습니다</p>
-
-            <div class="coordinate-section">
-                <h4>1. 행 선택 (A-G)</h4>
-                <div class="coordinate-buttons" id="rowButtons"></div>
-            </div>
-
-            <div class="coordinate-section">
-                <h4>2. 열 선택 (1-11)</h4>
-                <div class="coordinate-buttons" id="colButtons"></div>
-            </div>
-
-            <div class="coordinate-section">
-                <h4>3. 질문하기</h4>
-                <button id="askCoordinateBtn" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2em;">❓ 좌표 질문하기</button>
-            </div>
-
-            <div id="coordinateResult" class="coordinate-result"></div>
         </div>
 
         <!-- 레이저 히스토리 -->

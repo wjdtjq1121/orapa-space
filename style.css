@@ -108,6 +108,7 @@ header h1 {
     .planet-panel,
     .laser-panel,
     .history-panel,
+    .coordinate-panel,
     .color-mixing-panel,
     .debug-panel {
         grid-column: 1 / -1;
@@ -145,16 +146,20 @@ header h1 {
         order: 6;
     }
 
-    .questioner-section {
+    .coordinate-panel {
         order: 7;
     }
 
-    .color-mixing-panel {
+    .questioner-section {
         order: 8;
     }
 
-    .debug-panel {
+    .color-mixing-panel {
         order: 9;
+    }
+
+    .debug-panel {
+        order: 10;
     }
 }
 
@@ -583,6 +588,88 @@ header h1 {
 
 .position-btn:active {
     transform: translateY(0);
+}
+
+/* 좌표 질문 패널 */
+.coordinate-panel {
+    background: rgba(52, 152, 219, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    border: 2px solid rgba(52, 152, 219, 0.3);
+}
+
+.coordinate-panel h3 {
+    color: #3498db;
+    margin-bottom: 10px;
+}
+
+.panel-desc {
+    color: #bdc3c7;
+    font-size: 0.9em;
+    margin-bottom: 15px;
+}
+
+.coordinate-section {
+    margin-bottom: 20px;
+}
+
+.coordinate-section h4 {
+    color: #ecf0f1;
+    margin-bottom: 10px;
+    font-size: 1em;
+}
+
+.coordinate-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.coordinate-btn {
+    min-width: 50px;
+    padding: 12px 16px;
+    border: 2px solid rgba(52, 152, 219, 0.5);
+    border-radius: 8px;
+    background: rgba(52, 152, 219, 0.2);
+    color: #ecf0f1;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.coordinate-btn:hover {
+    background: rgba(52, 152, 219, 0.4);
+    border-color: #3498db;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.coordinate-btn.selected {
+    background: #3498db;
+    border-color: #f1c40f;
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6), 0 0 25px rgba(52, 152, 219, 0.5);
+    transform: scale(1.05);
+    color: #fff;
+}
+
+.coordinate-btn:active {
+    transform: translateY(0);
+}
+
+.coordinate-result {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(52, 152, 219, 0.2);
+    border-radius: 10px;
+    border-left: 4px solid #3498db;
+    display: none;
+}
+
+.coordinate-result .result-item {
+    color: #ecf0f1;
+    line-height: 1.6;
 }
 
 .planet-panel {
@@ -1367,6 +1454,25 @@ header h1 {
     #fireLaserBtn {
         padding: 12px !important;
         font-size: 1em !important;
+    }
+
+    /* 좌표 질문 패널 */
+    .coordinate-panel {
+        padding: 10px;
+    }
+
+    .coordinate-panel h3 {
+        font-size: 1em;
+    }
+
+    .coordinate-section h4 {
+        font-size: 0.9em;
+    }
+
+    .coordinate-btn {
+        min-width: 40px;
+        padding: 10px 12px;
+        font-size: 0.85em;
     }
 
     /* 행성 선택 패널 */
