@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025. 12. 24. 오후 2:35:02",
+  "totalPlanets": 7,
+  "planets": [
+    {
+      "type": "medium-earth",
+      "position": "(0, 3)",
+      "size": "3x3",
+      "color": "#f1c40f",
+      "reflective": true,
+      "shape": "octagon"
+    },
+    {
+      "type": "medium-jupiter",
+      "position": "(1, 0)",
+      "size": "4x2",
+      "color": "#ecf0f1",
+      "reflective": true,
+      "shape": "trapezoid"
+    },
+    {
+      "type": "large-saturn",
+      "position": "(1, 6)",
+      "size": "4x2",
+      "color": "#ecf0f1",
+      "reflective": true,
+      "shape": "ring"
+    },
+    {
+      "type": "small-red",
+      "position": "(1, 10)",
+      "size": "1x1",
+      "color": "#e74c3c",
+      "reflective": true,
+      "shape": "circle"
+    },
+    {
+      "type": "small-blue",
+      "position": "(3, 4)",
+      "size": "2x2",
+      "color": "#3498db",
+      "reflective": true,
+      "shape": "diamond"
+    },
+    {
+      "type": "black-hole",
+      "position": "(3, 6)",
+      "size": "1x1",
+      "color": "#000000",
+      "reflective": false,
+      "shape": "circle"
+    },
+    {
+      "type": "small-orange",
+      "position": "(5, 8)",
+      "size": "2x2",
+      "color": "#e74c3c",
+      "reflective": true,
+      "shape": "diamond"
+    }
+  ]
+}

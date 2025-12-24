@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.6.0";
+const GAME_VERSION = "1.7.0";
 
 // 게임 상태 관리
 const gameState = {
@@ -995,6 +995,15 @@ function checkAdjacentBlackHole(row, col) {
     return null;
 }
 
+// 현재 위치가 블랙홀인지 확인
+function checkDirectBlackHole(row, col) {
+    if (row >= 0 && row <= 6 && col >= 0 && col <= 10) {
+        const cell = gameState.questionerBoard[row][col];
+        return cell && cell.type === 'black-hole' ? { row, col } : null;
+    }
+    return null;
+}
+
 // 블랙홀 방향으로 굴절 (현재 방향에서 90도, 블랙홀에 가까워지는 방향)
 function bendTowardBlackHole(dirRow, dirCol, blackHolePos, currentRow, currentCol) {
     // 블랙홀과의 상대적 위치 계산
@@ -1032,6 +1041,8 @@ function bendTowardBlackHole(dirRow, dirCol, blackHolePos, currentRow, currentCo
 }
 
 function calculateLaserPath(direction, startRow, startCol, color) {
+    console.log(`🚀 레이저 발사: ${direction}방향, 시작 위치: (${startRow}, ${startCol}), 색상: ${color}`);
+    
     let currentRow = startRow;
     let currentCol = startCol;
     let dirRow, dirCol;
@@ -1056,6 +1067,8 @@ function calculateLaserPath(direction, startRow, startCol, color) {
             break;
     }
 
+    console.log(`이동 벡터: (dirRow=${dirRow}, dirCol=${dirCol})`);
+
     let collectedColors = []; // 수집된 색상 배열
     let path = [];
     let maxSteps = 100; // 무한 루프 방지
@@ -1064,11 +1077,14 @@ function calculateLaserPath(direction, startRow, startCol, color) {
     let hasRefracted = false; // 블랙홀 굴절 여부 (한 번만 굴절)
 
     path.push({ row: currentRow, col: currentCol, color: 'none', type: 'entry' });
+    console.log(`진입점: (${currentRow}, ${currentCol})`);
+    console.log('--- 레이저 경로 추적 시작 ---');
 
     while (steps < maxSteps) {
         // 다음 위치 계산
         currentRow += dirRow;
         currentCol += dirCol;
+
 
         // 보드 밖으로 나감
         if (currentRow < 0 || currentRow > 6 || currentCol < 0 || currentCol > 10) {
@@ -1093,9 +1109,10 @@ function calculateLaserPath(direction, startRow, startCol, color) {
         // 행성과 충돌 체크
         const planet = gameState.questionerBoard[currentRow][currentCol];
 
-        // 블랙홀 직접 히트 체크
+        // 블랙홀 직접 히트 체크 - 즉시 소멸
         if (planet && planet.type === 'black-hole') {
             path.push({ row: currentRow, col: currentCol, color: 'black', type: 'black-hole-hit' });
+            console.log(`💥 레이저가 블랙홀에 직접 충돌하여 소멸: (${currentRow}, ${currentCol})`);
             return {
                 path: path,
                 exitColor: null,
@@ -1153,6 +1170,8 @@ function calculateLaserPath(direction, startRow, startCol, color) {
                 continue;
             }
 
+            // 행성에서는 블랙홀 굴절 체크하지 않음 (행성 반사가 우선)
+
             // 행성 색상 수집 (다른 셀이면 같은 행성이라도 색상 수집)
             const planetColor = getPlanetBaseColor(planet.color);
             if (planetColor !== 'none') {
@@ -1161,12 +1180,16 @@ function calculateLaserPath(direction, startRow, startCol, color) {
 
             const currentMixedColor = mixColorsArray(collectedColors);
             path.push({ row: currentRow, col: currentCol, color: currentMixedColor, type: 'hit', planet: planet });
+            console.log(`🪐 행성 충돌: (${currentRow}, ${currentCol}), 타입: ${planet.type}, 색상: ${planet.color}`);
 
             if (planet.reflective) {
                 // 반사 처리
                 const reflection = calculateReflection(dirRow, dirCol, planet.shape, currentRow, currentCol, planet.originRow, planet.originCol, planet.width, planet.height, planet.rotation || 0);
+                const oldDirRow = dirRow;
+                const oldDirCol = dirCol;
                 dirRow = reflection.dirRow;
                 dirCol = reflection.dirCol;
+                console.log(`반사 방향 변경: (${oldDirRow}, ${oldDirCol}) → (${dirRow}, ${dirCol})`);
 
                 // 이 셀을 마지막 충돌 셀로 기록
                 lastHitCell = currentCellKey;
@@ -1183,25 +1206,40 @@ function calculateLaserPath(direction, startRow, startCol, color) {
                 };
             }
         } else {
-            // 행성이 없으면 경로에 추가
+            // 행성이 없는 빈 공간 - 블랙홀 인접 굴절 체크
             const currentMixedColor = mixColorsArray(collectedColors);
             path.push({ row: currentRow, col: currentCol, color: currentMixedColor, type: 'pass' });
+            console.log(`빈 공간 통과: (${currentRow}, ${currentCol})`);
 
             // 블랙홀 굴절 체크 (한 번만)
             if (!hasRefracted) {
                 // 인접한 8방향에 블랙홀이 있는지 확인
                 const adjacentBlackHole = checkAdjacentBlackHole(currentRow, currentCol);
                 if (adjacentBlackHole) {
-                    console.log(`블랙홀 굴절 발생: (${currentRow}, ${currentCol}), 블랙홀 위치: (${adjacentBlackHole.row}, ${adjacentBlackHole.col})`);
-                    console.log(`굴절 전 방향: (${dirRow}, ${dirCol})`);
+                    console.log(`🕳️ 블랙홀 굴절 발생: (${currentRow}, ${currentCol}), 블랙홀 위치: (${adjacentBlackHole.row}, ${adjacentBlackHole.col})`);
+                    console.log(`굴절 전 방향: dirRow=${dirRow}, dirCol=${dirCol}`);
                     // 블랙홀 방향으로 90도 굴절
                     const newDirection = bendTowardBlackHole(dirRow, dirCol, adjacentBlackHole, currentRow, currentCol);
                     dirRow = newDirection.dirRow;
                     dirCol = newDirection.dirCol;
-                    console.log(`굴절 후 방향: (${dirRow}, ${dirCol})`);
+                    console.log(`굴절 후 방향: dirRow=${dirRow}, dirCol=${dirCol}`);
                     hasRefracted = true;
                     path[path.length - 1].type = 'refract'; // 굴절 표시
+                    
+                    // 굴절 후 블랙홀로 향하는지 체크
+                    const nextRow = currentRow + dirRow;
+                    const nextCol = currentCol + dirCol;
+                    if (nextRow >= 0 && nextRow <= 6 && nextCol >= 0 && nextCol <= 10) {
+                        const nextCell = gameState.questionerBoard[nextRow][nextCol];
+                        if (nextCell && nextCell.type === 'black-hole') {
+                            console.log(`⚠️ 굴절 후 블랙홀로 향함 - 다음 스텝에서 흡수됨`);
+                        }
+                    }
+                } else {
+                    console.log(`블랙홀 체크: (${currentRow}, ${currentCol}) - 인접 블랙홀 없음`);
                 }
+            } else {
+                console.log(`블랙홀 굴절 이미 사용됨: (${currentRow}, ${currentCol})`);
             }
 
             // 마지막 충돌 기록 초기화
@@ -1213,6 +1251,8 @@ function calculateLaserPath(direction, startRow, startCol, color) {
 
     // maxSteps에 도달하면 무한 루프 (trapped)
     if (steps >= maxSteps) {
+        console.log(`🌀 무한 루프 감지: ${maxSteps}스텝 초과, 레이저 포획됨`);
+        console.log('--- 레이저 경로 추적 종료 (포획) ---');
         return {
             path: path,
             exitColor: null,
@@ -1224,6 +1264,8 @@ function calculateLaserPath(direction, startRow, startCol, color) {
 
     const exitPoint = path[path.length - 1];
     const finalColor = mixColorsArray(collectedColors);
+    console.log(`🎯 레이저 종료: 최종 위치: (${exitPoint.row}, ${exitPoint.col}), 최종 색상: ${finalColor}`);
+    console.log('--- 레이저 경로 추적 종료 ---');
     return {
         path: path,
         exitColor: finalColor,
@@ -2235,6 +2277,10 @@ function displayAllLaserTests() {
                             `(${step.row},${step.col})에서 ${planetColorKorean} ${shapeKorean} 행성 만남 → ${reflectionType}`
                         );
                     }
+                } else if (step.type === 'refract') {
+                    pathDescription.push(`(${step.row},${step.col})에서 블랙홀 굴절 🕳️ → 90도 방향 변경`);
+                } else if (step.type === 'black-hole-hit') {
+                    pathDescription.push(`(${step.row},${step.col})에서 블랙홀에 직접 충돌 💥 → 레이저 소멸`);
                 }
             }
 
