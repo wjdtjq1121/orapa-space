@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.2.1";
+const GAME_VERSION = "1.3.0";
 
 // 게임 상태 관리
 const gameState = {
@@ -7,6 +7,8 @@ const gameState = {
     mode: 'singlePlay',
     selectedPlanet: null,
     selectedPosition: null, // 선택된 위치
+    selectedRow: null, // 좌표 질문용 선택된 행
+    selectedCol: null, // 좌표 질문용 선택된 열
     planetRotations: {
         'medium-jupiter': 0,
         'large-saturn': 0
@@ -2422,6 +2424,110 @@ function setupLaserButtons() {
     }
 }
 
+// 좌표 질문 버튼 생성
+function setupCoordinateButtons() {
+    // 행 버튼 생성 (A-G)
+    const rowButtonsContainer = document.getElementById('rowButtons');
+    for (let i = 0; i < 7; i++) {
+        const button = document.createElement('button');
+        button.className = 'coordinate-btn';
+        const letter = String.fromCharCode(65 + i); // A-G
+        button.textContent = letter;
+        button.dataset.row = i;
+        button.addEventListener('click', () => {
+            gameState.selectedRow = i;
+            // 모든 행 버튼에서 selected 제거하고 현재 버튼만 selected 추가
+            document.querySelectorAll('#rowButtons .coordinate-btn').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+        });
+        rowButtonsContainer.appendChild(button);
+    }
+
+    // 열 버튼 생성 (1-11)
+    const colButtonsContainer = document.getElementById('colButtons');
+    for (let i = 1; i <= 11; i++) {
+        const button = document.createElement('button');
+        button.className = 'coordinate-btn';
+        button.textContent = i;
+        button.dataset.col = i - 1; // 0-based index
+        button.addEventListener('click', () => {
+            gameState.selectedCol = i - 1;
+            // 모든 열 버튼에서 selected 제거하고 현재 버튼만 selected 추가
+            document.querySelectorAll('#colButtons .coordinate-btn').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+        });
+        colButtonsContainer.appendChild(button);
+    }
+}
+
+// 좌표 질문하기
+function askCoordinate() {
+    // 게임 시작 확인
+    if (gameState.phase !== 'playing') {
+        alert('게임 시작 버튼을 눌러주세요!');
+        return;
+    }
+
+    // 행/열 선택 확인
+    if (gameState.selectedRow === null || gameState.selectedCol === null) {
+        alert('행과 열을 모두 선택하세요!');
+        return;
+    }
+
+    const row = gameState.selectedRow;
+    const col = gameState.selectedCol;
+    const rowLetter = String.fromCharCode(65 + row); // A-G
+    const colNumber = col + 1; // 1-11
+
+    // 질문자 보드(AI 문제)에서 해당 좌표의 내용 확인
+    const cell = gameState.questionerBoard[row][col];
+
+    let answer = '';
+    if (!cell) {
+        answer = '아무것도 없습니다';
+    } else {
+        // 행성 타입에 따라 색상 결정
+        const planetColorMap = {
+            'small-red': '빨간',
+            'small-orange': '빨간',
+            'small-blue': '파란',
+            'medium-earth': '노란',
+            'medium-jupiter': '흰',
+            'large-saturn': '흰'
+        };
+        const colorName = planetColorMap[cell.type] || '알 수 없는';
+        answer = `${colorName} 행성이 있습니다`;
+    }
+
+    // 시도 횟수 증가
+    gameState.laserCount++;
+    document.getElementById('laserCount').textContent = gameState.laserCount;
+
+    // 결과 표시
+    const resultDiv = document.getElementById('coordinateResult');
+    resultDiv.innerHTML = `
+        <div class="result-item">
+            <strong>질문:</strong> ${rowLetter}행 ${colNumber}열에는 무엇이 있습니까?<br>
+            <strong>답변:</strong> ${answer}
+        </div>
+    `;
+    resultDiv.style.display = 'block';
+
+    // 히스토리에 추가
+    const historyItem = document.createElement('div');
+    historyItem.className = 'history-item';
+    historyItem.innerHTML = `
+        #${gameState.laserCount}: [좌표] ${rowLetter}행 ${colNumber}열 → ${answer}
+    `;
+    const historyList = document.getElementById('laserHistory');
+    historyList.insertBefore(historyItem, historyList.firstChild);
+
+    // 3초 후 결과 메시지 제거
+    setTimeout(() => {
+        resultDiv.style.display = 'none';
+    }, 3000);
+}
+
 // 게임 모드에 따라 UI 업데이트
 function updateGameModeUI() {
     const isSinglePlay = gameState.mode === 'singlePlay';
@@ -2472,6 +2578,7 @@ function setupEventListeners() {
     document.getElementById('confirmSetup').addEventListener('click', confirmSetup);
     document.getElementById('submitSolution').addEventListener('click', submitSolution);
     document.getElementById('fireLaserBtn').addEventListener('click', fireLaserFromButton);
+    document.getElementById('askCoordinateBtn').addEventListener('click', askCoordinate);
     document.getElementById('copyDebugInfo').addEventListener('click', copyDebugInfo);
 
     document.getElementById('gameMode').addEventListener('change', (e) => {
@@ -2497,6 +2604,7 @@ function setupEventListeners() {
 
     setupPlanetSelector();
     setupLaserButtons();
+    setupCoordinateButtons();
 }
 
 // 게임 시작
