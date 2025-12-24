@@ -1,11 +1,17 @@
 # ORAPA SPACE - 개발 가이드
 
 ## 현재 버전
-**Version: 1.0.0** (2025-12-23)
+**Version: 1.1.0** (2025-12-24)
 
 ---
 
 ## 버전 히스토리
+
+### v1.1.0 (2025-12-24)
+- 행성 선택 토글 기능 추가 (같은 행성 재클릭 시 선택 해제)
+- 행성 패널 바깥 영역 클릭 시 선택 해제 기능
+- 싱글 플레이 모드 초기 로드 시 버튼 자동 숨김 개선
+- .gitignore 수정 (rule/ 폴더 제외)
 
 ### v1.0.0 (2025-12-23)
 - 싱글 플레이 모드 추가
@@ -114,11 +120,22 @@ orapa-space/
 
 ### 2. script.js에서 버전 업데이트
 ```javascript
-const GAME_VERSION = "1.0.0";  // 이 값을 변경
+const GAME_VERSION = "1.1.0";  // 이 값을 변경
 ```
 
 ### 3. 자동 반영
 - `updateGameVersion()` 함수가 자동으로 HTML 업데이트
+
+### 4. ⚠️ **중요: GitHub Pages에 반영**
+- **모든 수정 후 반드시 git push 필수!**
+- GitHub Pages는 push해야만 업데이트됨
+- 로컬 수정만으로는 https://wjdtjq1121.github.io/orapa-space/ 에 반영 안 됨
+
+```bash
+git add .
+git commit -m "feat: 변경사항 설명"
+git push
+```
 
 ---
 

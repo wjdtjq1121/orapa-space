@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.0.0";
+const GAME_VERSION = "1.1.0";
 
 // 게임 상태 관리
 const gameState = {
@@ -2302,6 +2302,14 @@ function setupPlanetSelector() {
                 return;
             }
 
+            // 이미 선택된 행성을 다시 클릭하면 선택 해제
+            if (item.classList.contains('selected')) {
+                item.classList.remove('selected');
+                gameState.selectedPlanet = null;
+                return;
+            }
+
+            // 다른 행성 선택
             planetItems.forEach(p => p.classList.remove('selected'));
             item.classList.add('selected');
             gameState.selectedPlanet = item.dataset.planet;
@@ -2321,6 +2329,29 @@ function setupPlanetSelector() {
             // 미리보기 회전 업데이트
             updatePlanetPreview(planetType);
         });
+    });
+
+    // 행성 패널 바깥 영역 클릭 시 선택 해제
+    document.addEventListener('click', (e) => {
+        const planetPanel = document.querySelector('.planet-panel');
+        const gameBoard = e.target.closest('.game-board');
+        const cell = e.target.closest('.cell');
+        const boardWrapper = e.target.closest('.board-wrapper');
+        const boardLabel = e.target.closest('.board-label');
+
+        // 행성 패널을 클릭한 경우 무시
+        if (planetPanel && planetPanel.contains(e.target)) {
+            return;
+        }
+
+        // 게임 보드 관련 요소를 클릭한 경우 무시 (배치를 위해 선택 유지)
+        if (gameBoard || cell || boardWrapper || boardLabel) {
+            return;
+        }
+
+        // 그 외의 영역을 클릭하면 선택 해제
+        planetItems.forEach(p => p.classList.remove('selected'));
+        gameState.selectedPlanet = null;
     });
 }
 
@@ -2516,6 +2547,9 @@ function initGame() {
     if (startSection) {
         startSection.style.display = 'block';
     }
+
+    // 게임 모드 UI 초기화 (싱글 플레이 모드에서 버튼 숨김)
+    updateGameModeUI();
 }
 
 // 버전 정보 업데이트
