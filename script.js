@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.4.0";
+const GAME_VERSION = "1.4.1";
 
 // 게임 상태 관리
 const gameState = {
@@ -1907,8 +1907,10 @@ function randomPlacement() {
     gameState.questionerBoard = Array(7).fill(null).map(() => Array(11).fill(null));
     gameState.blackHoles = []; // 블랙홀 위치 초기화
 
-    // 블랙홀 제외한 6개의 행성 타입을 각각 1개씩만 배치
-    const planetTypes = Object.keys(PLANETS).filter(type => type !== 'black-hole');
+    // 연습 모드에서는 블랙홀 포함, 다른 모드에서는 블랙홀 제외
+    const planetTypes = gameState.mode === 'practice'
+        ? Object.keys(PLANETS)
+        : Object.keys(PLANETS).filter(type => type !== 'black-hole');
 
     // 행성 배치 순서를 랜덤하게 섞기
     const shuffledPlanetTypes = planetTypes.sort(() => Math.random() - 0.5);
@@ -1949,6 +1951,10 @@ function randomPlacement() {
 
                 if (canPlacePlanet(gameState.questionerBoard, row, col, planet.width, planet.height, planetType, 0)) {
                     placePlanetOnBoard(gameState.questionerBoard, row, col, planetType, planet, 0);
+                    // 블랙홀이면 위치 기록
+                    if (planetType === 'black-hole') {
+                        gameState.blackHoles.push({ row, col });
+                    }
                     placed = true;
                 }
 
