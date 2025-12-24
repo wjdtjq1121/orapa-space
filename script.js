@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.4.2";
+const GAME_VERSION = "1.4.3";
 
 // 게임 상태 관리
 const gameState = {
@@ -1912,6 +1912,8 @@ function randomPlacement() {
         ? Object.keys(PLANETS)
         : Object.keys(PLANETS).filter(type => type !== 'black-hole');
 
+    console.log('randomPlacement - mode:', gameState.mode, 'planetTypes:', planetTypes);
+
     // 행성 배치 순서를 랜덤하게 섞기
     const shuffledPlanetTypes = planetTypes.sort(() => Math.random() - 0.5);
 
@@ -1954,6 +1956,7 @@ function randomPlacement() {
                     // 블랙홀이면 위치 기록
                     if (planetType === 'black-hole') {
                         gameState.blackHoles.push({ row, col });
+                        console.log('블랙홀 배치됨:', row, col);
                     }
                     placed = true;
                 }
