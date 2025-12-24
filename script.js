@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.5.1";
+const GAME_VERSION = "1.6.0";
 
 // 게임 상태 관리
 const gameState = {
@@ -971,13 +971,17 @@ function fireLaser() {
 }
 
 // 레이저 경로 계산
-// 인접한 블랙홀 확인
+// 인접한 블랙홀 확인 (8방향)
 function checkAdjacentBlackHole(row, col) {
     const directions = [
-        { row: row - 1, col: col, dir: 'top' },    // 위
-        { row: row + 1, col: col, dir: 'bottom' }, // 아래
-        { row: row, col: col - 1, dir: 'left' },   // 왼쪽
-        { row: row, col: col + 1, dir: 'right' }   // 오른쪽
+        { row: row - 1, col: col, dir: 'top' },           // 위
+        { row: row + 1, col: col, dir: 'bottom' },        // 아래
+        { row: row, col: col - 1, dir: 'left' },          // 왼쪽
+        { row: row, col: col + 1, dir: 'right' },         // 오른쪽
+        { row: row - 1, col: col - 1, dir: 'top-left' },     // 왼쪽 위
+        { row: row - 1, col: col + 1, dir: 'top-right' },    // 오른쪽 위
+        { row: row + 1, col: col - 1, dir: 'bottom-left' },  // 왼쪽 아래
+        { row: row + 1, col: col + 1, dir: 'bottom-right' }  // 오른쪽 아래
     ];
 
     for (const adj of directions) {
@@ -991,35 +995,39 @@ function checkAdjacentBlackHole(row, col) {
     return null;
 }
 
-// 블랙홀 방향으로 굴절
-function bendTowardBlackHole(dirRow, dirCol, blackHolePos) {
-    // 블랙홀이 있는 방향으로 90도 굴절
-    const bhDir = blackHolePos.direction;
+// 블랙홀 방향으로 굴절 (현재 방향에서 90도, 블랙홀에 가까워지는 방향)
+function bendTowardBlackHole(dirRow, dirCol, blackHolePos, currentRow, currentCol) {
+    // 블랙홀과의 상대적 위치 계산
+    const rowDiff = blackHolePos.row - currentRow; // 양수면 블랙홀이 아래, 음수면 위
+    const colDiff = blackHolePos.col - currentCol; // 양수면 블랙홀이 오른쪽, 음수면 왼쪽
 
-    // 현재 이동 방향
-    let currentDir = '';
-    if (dirRow === -1) currentDir = 'top';
-    else if (dirRow === 1) currentDir = 'bottom';
-    else if (dirCol === -1) currentDir = 'left';
-    else if (dirCol === 1) currentDir = 'right';
-
-    // 블랙홀 방향과 같으면 굴절 없음 (직진)
-    if (currentDir === bhDir) {
-        return { dirRow, dirCol };
+    // 현재 방향이 수평(좌우)이면 수직(상하)으로 90도 굴절
+    if (dirRow === 0) {
+        // rowDiff에 따라 top 또는 bottom 선택
+        if (rowDiff > 0) {
+            return { dirRow: 1, dirCol: 0 }; // bottom
+        } else if (rowDiff < 0) {
+            return { dirRow: -1, dirCol: 0 }; // top
+        } else {
+            // rowDiff가 0이면 블랙홀이 같은 행에 있음 - 굴절 안함
+            return { dirRow, dirCol };
+        }
     }
 
-    // 블랙홀 방향으로 90도 굴절
-    switch (bhDir) {
-        case 'top':
-            return { dirRow: -1, dirCol: 0 };
-        case 'bottom':
-            return { dirRow: 1, dirCol: 0 };
-        case 'left':
-            return { dirRow: 0, dirCol: -1 };
-        case 'right':
-            return { dirRow: 0, dirCol: 1 };
+    // 현재 방향이 수직(상하)이면 수평(좌우)으로 90도 굴절
+    if (dirCol === 0) {
+        // colDiff에 따라 left 또는 right 선택
+        if (colDiff > 0) {
+            return { dirRow: 0, dirCol: 1 }; // right
+        } else if (colDiff < 0) {
+            return { dirRow: 0, dirCol: -1 }; // left
+        } else {
+            // colDiff가 0이면 블랙홀이 같은 열에 있음 - 굴절 안함
+            return { dirRow, dirCol };
+        }
     }
 
+    // 대각선 방향인 경우 (정상적으로는 발생하지 않음)
     return { dirRow, dirCol };
 }
 
@@ -1181,13 +1189,13 @@ function calculateLaserPath(direction, startRow, startCol, color) {
 
             // 블랙홀 굴절 체크 (한 번만)
             if (!hasRefracted) {
-                // 인접한 4방향에 블랙홀이 있는지 확인
+                // 인접한 8방향에 블랙홀이 있는지 확인
                 const adjacentBlackHole = checkAdjacentBlackHole(currentRow, currentCol);
                 if (adjacentBlackHole) {
-                    console.log(`블랙홀 굴절 발생: (${currentRow}, ${currentCol}), 블랙홀 방향: ${adjacentBlackHole.direction}`);
+                    console.log(`블랙홀 굴절 발생: (${currentRow}, ${currentCol}), 블랙홀 위치: (${adjacentBlackHole.row}, ${adjacentBlackHole.col})`);
                     console.log(`굴절 전 방향: (${dirRow}, ${dirCol})`);
                     // 블랙홀 방향으로 90도 굴절
-                    const newDirection = bendTowardBlackHole(dirRow, dirCol, adjacentBlackHole);
+                    const newDirection = bendTowardBlackHole(dirRow, dirCol, adjacentBlackHole, currentRow, currentCol);
                     dirRow = newDirection.dirRow;
                     dirCol = newDirection.dirCol;
                     console.log(`굴절 후 방향: (${dirRow}, ${dirCol})`);
