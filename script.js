@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.4.3";
+const GAME_VERSION = "1.5.0";
 
 // 게임 상태 관리
 const gameState = {
@@ -2027,7 +2027,13 @@ function clearBoard() {
 // 배치된 행성 검증
 function validatePlanetPlacement() {
     const planetCounts = {};
-    const allPlanetTypes = Object.keys(PLANETS);
+
+    // 연습 모드면 블랙홀 포함, 아니면 제외
+    const allPlanetTypes = gameState.mode === 'practice'
+        ? Object.keys(PLANETS)
+        : Object.keys(PLANETS).filter(type => type !== 'black-hole');
+
+    const expectedCount = allPlanetTypes.length;
 
     // 모든 행성 타입의 카운트 초기화
     allPlanetTypes.forEach(type => {
@@ -2045,14 +2051,14 @@ function validatePlanetPlacement() {
         }
     }
 
-    // 검증: 6개의 행성이 각각 정확히 1개씩 배치되었는지 확인
+    // 검증: 행성이 각각 정확히 1개씩 배치되었는지 확인
     const placedPlanets = Object.entries(planetCounts).filter(([_, count]) => count > 0);
     const invalidPlanets = Object.entries(planetCounts).filter(([_, count]) => count > 1);
 
-    if (placedPlanets.length !== 6) {
+    if (placedPlanets.length !== expectedCount) {
         return {
             valid: false,
-            message: `6개의 서로 다른 행성을 각각 1개씩 배치해야 합니다.\n현재 배치된 행성: ${placedPlanets.length}개`
+            message: `${expectedCount}개의 서로 다른 행성을 각각 1개씩 배치해야 합니다.\n현재 배치된 행성: ${placedPlanets.length}개`
         };
     }
 
@@ -2070,7 +2076,7 @@ function validatePlanetPlacement() {
         const missing = allPlanetTypes.filter(type => planetCounts[type] === 0);
         return {
             valid: false,
-            message: `6개의 서로 다른 행성을 각각 1개씩 배치해야 합니다.\n배치되지 않은 행성: ${missing.join(', ')}`
+            message: `${expectedCount}개의 서로 다른 행성을 각각 1개씩 배치해야 합니다.\n배치되지 않은 행성: ${missing.join(', ')}`
         };
     }
 
