@@ -1,10 +1,10 @@
 // 버전 정보
-const GAME_VERSION = "1.3.1";
+const GAME_VERSION = "1.4.0";
 
 // 게임 상태 관리
 const gameState = {
     phase: 'waiting', // waiting, setup, playing, finished
-    mode: 'singlePlay',
+    mode: 'singleHard', // singleEasy, singleHard, practice
     selectedPlanet: null,
     selectedPosition: null, // 선택된 위치
     selectedRow: null, // 좌표 질문용 선택된 행
@@ -18,7 +18,8 @@ const gameState = {
     explorerBoard: Array(7).fill(null).map(() => Array(11).fill(null)),
     questionerBoard: Array(7).fill(null).map(() => Array(11).fill(null)),
     laserHistory: [],
-    questionerBoardHidden: false // 싱글 플레이 모드에서 정답 보드 숨김 여부
+    questionerBoardHidden: false, // 싱글 플레이 모드에서 정답 보드 숨김 여부
+    blackHoles: [] // 블랙홀 위치 배열 (하드 모드용)
 };
 
 // 현재 화면 크기에 따른 셀 크기 계산
@@ -88,6 +89,16 @@ const PLANETS = {
         width: 4,
         height: 2,
         hasRing: true
+    },
+    'black-hole': {
+        size: 'small',
+        color: '#000000',
+        shape: 'circle',
+        reflective: false, // 반사 없음
+        refractive: true, // 굴절 기능
+        absorptive: true, // 레이저 흡수
+        width: 1,
+        height: 1
     }
 };
 
@@ -715,7 +726,7 @@ function renderBoard(boardId) {
             const planetData = boardData[row][col];
 
             // 싱글 플레이 모드에서 질문자 보드를 물음표로 가리기
-            if (isQuestioner && gameState.mode === 'singlePlay' && gameState.questionerBoardHidden) {
+            if (isQuestioner && (gameState.mode === 'singleEasy' || gameState.mode === 'singleHard') && gameState.questionerBoardHidden) {
                 const hiddenMarker = document.createElement('div');
                 hiddenMarker.style.cssText = `
                     width: 100%;
@@ -960,6 +971,58 @@ function fireLaser() {
 }
 
 // 레이저 경로 계산
+// 인접한 블랙홀 확인
+function checkAdjacentBlackHole(row, col) {
+    const directions = [
+        { row: row - 1, col: col, dir: 'top' },    // 위
+        { row: row + 1, col: col, dir: 'bottom' }, // 아래
+        { row: row, col: col - 1, dir: 'left' },   // 왼쪽
+        { row: row, col: col + 1, dir: 'right' }   // 오른쪽
+    ];
+
+    for (const adj of directions) {
+        if (adj.row >= 0 && adj.row <= 6 && adj.col >= 0 && adj.col <= 10) {
+            const cell = gameState.questionerBoard[adj.row][adj.col];
+            if (cell && cell.type === 'black-hole') {
+                return { row: adj.row, col: adj.col, direction: adj.dir };
+            }
+        }
+    }
+    return null;
+}
+
+// 블랙홀 방향으로 굴절
+function bendTowardBlackHole(dirRow, dirCol, blackHolePos) {
+    // 블랙홀이 있는 방향으로 90도 굴절
+    const bhDir = blackHolePos.direction;
+
+    // 현재 이동 방향
+    let currentDir = '';
+    if (dirRow === -1) currentDir = 'top';
+    else if (dirRow === 1) currentDir = 'bottom';
+    else if (dirCol === -1) currentDir = 'left';
+    else if (dirCol === 1) currentDir = 'right';
+
+    // 블랙홀 방향과 같으면 굴절 없음 (직진)
+    if (currentDir === bhDir) {
+        return { dirRow, dirCol };
+    }
+
+    // 블랙홀 방향으로 90도 굴절
+    switch (bhDir) {
+        case 'top':
+            return { dirRow: -1, dirCol: 0 };
+        case 'bottom':
+            return { dirRow: 1, dirCol: 0 };
+        case 'left':
+            return { dirRow: 0, dirCol: -1 };
+        case 'right':
+            return { dirRow: 0, dirCol: 1 };
+    }
+
+    return { dirRow, dirCol };
+}
+
 function calculateLaserPath(direction, startRow, startCol, color) {
     let currentRow = startRow;
     let currentCol = startCol;
@@ -990,6 +1053,7 @@ function calculateLaserPath(direction, startRow, startCol, color) {
     let maxSteps = 100; // 무한 루프 방지
     let steps = 0;
     let lastHitCell = null; // 마지막으로 충돌한 셀 위치 추적 (row,col)
+    let hasRefracted = false; // 블랙홀 굴절 여부 (한 번만 굴절)
 
     path.push({ row: currentRow, col: currentCol, color: 'none', type: 'entry' });
 
@@ -1020,6 +1084,19 @@ function calculateLaserPath(direction, startRow, startCol, color) {
 
         // 행성과 충돌 체크
         const planet = gameState.questionerBoard[currentRow][currentCol];
+
+        // 블랙홀 직접 히트 체크
+        if (planet && planet.type === 'black-hole') {
+            path.push({ row: currentRow, col: currentCol, color: 'black', type: 'black-hole-hit' });
+            return {
+                path: path,
+                exitColor: null,
+                exitPosition: null,
+                exitDirection: null,
+                status: 'disappeared'
+            };
+        }
+
         if (planet) {
             // 링 행성의 실선 부분 통과 처리
             if (planet.hasRing) {
@@ -1102,11 +1179,36 @@ function calculateLaserPath(direction, startRow, startCol, color) {
             const currentMixedColor = mixColorsArray(collectedColors);
             path.push({ row: currentRow, col: currentCol, color: currentMixedColor, type: 'pass' });
 
+            // 블랙홀 굴절 체크 (한 번만)
+            if (!hasRefracted) {
+                // 인접한 4방향에 블랙홀이 있는지 확인
+                const adjacentBlackHole = checkAdjacentBlackHole(currentRow, currentCol);
+                if (adjacentBlackHole) {
+                    // 블랙홀 방향으로 90도 굴절
+                    const newDirection = bendTowardBlackHole(dirRow, dirCol, adjacentBlackHole);
+                    dirRow = newDirection.dirRow;
+                    dirCol = newDirection.dirCol;
+                    hasRefracted = true;
+                    path[path.length - 1].type = 'refract'; // 굴절 표시
+                }
+            }
+
             // 마지막 충돌 기록 초기화
             lastHitCell = null;
         }
 
         steps++;
+    }
+
+    // maxSteps에 도달하면 무한 루프 (trapped)
+    if (steps >= maxSteps) {
+        return {
+            path: path,
+            exitColor: null,
+            exitPosition: null,
+            exitDirection: null,
+            status: 'trapped'
+        };
     }
 
     const exitPoint = path[path.length - 1];
@@ -1499,6 +1601,16 @@ function displayLaserResult(result, inputPosition) {
             <strong>레이저 차단!</strong><br>
             레이저가 행성에 막혔습니다.
         `;
+    } else if (result.status === 'disappeared') {
+        resultDiv.innerHTML = `
+            <strong>소멸! 🕳️</strong><br>
+            레이저가 블랙홀에 흡수되었습니다.
+        `;
+    } else if (result.status === 'trapped') {
+        resultDiv.innerHTML = `
+            <strong>포획! ⚠️</strong><br>
+            레이저가 블랙홀의 중력에 갇혔습니다.
+        `;
     } else {
         // 출구 위치 계산
         const exitPoint = result.path[result.path.length - 1];
@@ -1694,6 +1806,10 @@ function addToHistory(positionId, result) {
     let statusText;
     if (result.status === 'blocked') {
         statusText = '차단됨';
+    } else if (result.status === 'disappeared') {
+        statusText = '소멸 (블랙홀) 🕳️';
+    } else if (result.status === 'trapped') {
+        statusText = '포획 (블랙홀) ⚠️';
     } else {
         const exitPoint = result.path[result.path.length - 1];
         const exitLabel = getPositionLabel(result.exitDirection, exitPoint.row, exitPoint.col);
@@ -1789,9 +1905,10 @@ function placePlanetOnBoard(board, row, col, planetType, planetData, rotation = 
 function randomPlacement() {
     // 기존 배치 초기화
     gameState.questionerBoard = Array(7).fill(null).map(() => Array(11).fill(null));
+    gameState.blackHoles = []; // 블랙홀 위치 초기화
 
-    // 6개의 행성 타입을 각각 1개씩만 배치
-    const planetTypes = Object.keys(PLANETS); // 정확히 6개의 행성
+    // 블랙홀 제외한 6개의 행성 타입을 각각 1개씩만 배치
+    const planetTypes = Object.keys(PLANETS).filter(type => type !== 'black-hole');
 
     // 행성 배치 순서를 랜덤하게 섞기
     const shuffledPlanetTypes = planetTypes.sort(() => Math.random() - 0.5);
@@ -1841,6 +1958,35 @@ function randomPlacement() {
 
         if (!placed) {
             console.warn(`Failed to place planet ${planetType} - trying again with relaxed constraints`);
+        }
+    }
+
+    // 하드 모드일 때 블랙홀 1-2개 배치
+    if (gameState.mode === 'singleHard') {
+        const numBlackHoles = Math.floor(Math.random() * 2) + 1; // 1 or 2
+        const blackHolePlanet = PLANETS['black-hole'];
+
+        for (let i = 0; i < numBlackHoles; i++) {
+            let placed = false;
+            let attempts = 0;
+
+            while (!placed && attempts < 100) {
+                const row = Math.floor(Math.random() * 7);
+                const col = Math.floor(Math.random() * 11);
+
+                // 빈 칸인지 확인
+                if (!gameState.questionerBoard[row][col]) {
+                    placePlanetOnBoard(gameState.questionerBoard, row, col, 'black-hole', blackHolePlanet, 0);
+                    gameState.blackHoles.push({ row, col });
+                    placed = true;
+                }
+
+                attempts++;
+            }
+
+            if (!placed) {
+                console.warn(`Failed to place black hole ${i + 1}`);
+            }
         }
     }
 
@@ -2108,7 +2254,7 @@ function confirmSetup() {
     displayAllLaserTests();
 
     // 싱글 플레이 모드가 아닐 때만 알림 표시
-    if (gameState.mode !== 'singlePlay') {
+    if (gameState.mode !== 'singleEasy' && gameState.mode !== 'singleHard') {
         alert('배치가 완료되었습니다! 이제 레이저를 발사하여 행성 위치를 추론하세요.');
     }
 
@@ -2177,7 +2323,7 @@ function submitSolution() {
         document.getElementById('currentPhase').textContent = '게임 종료 - 승리!';
 
         // 싱글 플레이 모드에서는 정답 공개
-        if (gameState.mode === 'singlePlay') {
+        if (gameState.mode === 'singleEasy' || gameState.mode === 'singleHard') {
             gameState.questionerBoardHidden = false;
             renderBoard('questionerBoard');
             // 포기하기 버튼 숨기기
@@ -2218,7 +2364,7 @@ function submitSolution() {
             resultDiv.remove();
         }
         // 싱글 플레이 모드에서는 다시하기 버튼 표시
-        if (gameState.mode === 'singlePlay') {
+        if (gameState.mode === 'singleEasy' || gameState.mode === 'singleHard') {
             showRestartButton();
         }
     }, 3000);
@@ -2226,7 +2372,7 @@ function submitSolution() {
 
 // 포기하기
 function giveUp() {
-    if (gameState.mode !== 'singlePlay' || gameState.phase !== 'playing') {
+    if ((gameState.mode !== 'singleEasy' && gameState.mode !== 'singleHard') || gameState.phase !== 'playing') {
         return;
     }
 
@@ -2485,6 +2631,8 @@ function askCoordinate() {
     let answer = '';
     if (!cell) {
         answer = '아무것도 없습니다';
+    } else if (cell.type === 'black-hole') {
+        answer = '블랙홀이 있습니다 🕳️';
     } else {
         // 행성 타입에 따라 색상 결정
         const planetColorMap = {
@@ -2530,14 +2678,19 @@ function askCoordinate() {
 
 // 게임 모드에 따라 UI 업데이트
 function updateGameModeUI() {
-    const isSinglePlay = gameState.mode === 'singlePlay';
+    const isSinglePlay = gameState.mode === 'singleEasy' || gameState.mode === 'singleHard';
+    const isPractice = gameState.mode === 'practice';
 
     // 질문자 보드 제목 변경
     const questionerTitle = document.getElementById('questionerBoardTitle');
     const questionerDesc = document.getElementById('questionerBoardDesc');
     if (isSinglePlay) {
         questionerTitle.textContent = 'AI 문제';
-        questionerDesc.textContent = '레이저로 행성 위치를 추론하세요';
+        if (gameState.mode === 'singleHard') {
+            questionerDesc.textContent = '레이저로 행성 위치를 추론하세요 (블랙홀 주의!)';
+        } else {
+            questionerDesc.textContent = '레이저로 행성 위치를 추론하세요';
+        }
     } else {
         questionerTitle.textContent = '질문자 보드';
         questionerDesc.textContent = '행성을 배치하세요';
@@ -2586,7 +2739,7 @@ function setupEventListeners() {
         updateGameModeUI();
 
         // 싱글 플레이로 전환 시 자동 설정
-        if (gameState.mode === 'singlePlay' && gameState.phase === 'setup') {
+        if ((gameState.mode === 'singleEasy' || gameState.mode === 'singleHard') && gameState.phase === 'setup') {
             setTimeout(() => {
                 randomPlacement();
                 setTimeout(() => {
@@ -2624,7 +2777,7 @@ function startGame() {
     gameState.selectedPlanet = null;
     gameState.selectedPosition = null;
     // 중요: 싱글 플레이 모드면 먼저 숨김 상태로 설정
-    gameState.questionerBoardHidden = gameState.mode === 'singlePlay';
+    gameState.questionerBoardHidden = (gameState.mode === 'singleEasy' || gameState.mode === 'singleHard');
     gameState.planetRotations = {
         'medium-jupiter': 0,
         'large-saturn': 0
@@ -2642,7 +2795,7 @@ function startGame() {
     updateGameModeUI();
 
     // 싱글 플레이 모드면 자동으로 랜덤 배치 + 배치 완료
-    if (gameState.mode === 'singlePlay') {
+    if (gameState.mode === 'singleEasy' || gameState.mode === 'singleHard') {
         // 즉시 실행 - requestAnimationFrame 제거
         randomPlacement();
         confirmSetup();

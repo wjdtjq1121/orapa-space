@@ -18,7 +18,8 @@
             <div class="info-panel">
                 <h3>게임 모드</h3>
                 <select id="gameMode">
-                    <option value="singlePlay">싱글 플레이</option>
+                    <option value="singleEasy">싱글 쉬움</option>
+                    <option value="singleHard" selected>싱글 어려움 (블랙홀)</option>
                     <option value="practice">연습 모드</option>
                 </select>
             </div>
@@ -125,6 +126,10 @@
                     </div>
                     <span>큰 링 흰색</span>
                     <button class="rotate-btn" data-planet="large-saturn">🔄 회전</button>
+                </div>
+                <div class="planet-item" data-planet="black-hole">
+                    <div class="planet small black-hole shape-circle" style="background: #000000; box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.1);"></div>
+                    <span>블랙홀 🕳️</span>
                 </div>
             </div>
         </div>
