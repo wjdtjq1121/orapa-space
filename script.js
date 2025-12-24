@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.1.0";
+const GAME_VERSION = "1.2.0";
 
 // 게임 상태 관리
 const gameState = {
@@ -381,7 +381,7 @@ function placePlanet(row, col) {
 function markExploration(row, col) {
     // 배치 완료 확인
     if (gameState.phase !== 'playing') {
-        alert('질문자 보드에서 배치 완료를 먼저 해주세요!');
+        alert('게임 시작 버튼을 눌러주세요!');
         return;
     }
 
@@ -413,8 +413,21 @@ function markExploration(row, col) {
 
     // 이미 배치된 행성인지 확인 (탐험가 보드에서)
     if (isPlanetAlreadyPlaced(gameState.selectedPlanet, gameState.explorerBoard)) {
-        alert('이 행성은 이미 배치되었습니다!\n각 행성은 1개씩만 배치할 수 있습니다.');
-        return;
+        const planetNames = {
+            'small-red': '작은 빨강',
+            'small-orange': '중간 빨강',
+            'small-blue': '중간 파랑',
+            'medium-earth': '중간 노랑',
+            'medium-jupiter': '큰 흰색',
+            'large-saturn': '큰 링 흰색'
+        };
+        const confirmed = confirm(`이미 탐험가 보드에 ${planetNames[gameState.selectedPlanet]} 행성이 배치되어 있습니다.\n배치되어 있는 행성을 제거하고 새로 배치하겠습니까?`);
+        if (!confirmed) {
+            return;
+        }
+        // 확인하면 기존 행성 제거
+        removePlanetFromBoard(gameState.explorerBoard, gameState.selectedPlanet);
+        renderBoard('explorerBoard');
     }
 
     const planet = PLANETS[gameState.selectedPlanet];
