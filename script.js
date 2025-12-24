@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.4.1";
+const GAME_VERSION = "1.4.2";
 
 // 게임 상태 관리
 const gameState = {
@@ -1967,32 +1967,28 @@ function randomPlacement() {
         }
     }
 
-    // 하드 모드일 때 블랙홀 1-2개 배치
+    // 하드 모드일 때 블랙홀 1개 배치
     if (gameState.mode === 'singleHard') {
-        const numBlackHoles = Math.floor(Math.random() * 2) + 1; // 1 or 2
         const blackHolePlanet = PLANETS['black-hole'];
+        let placed = false;
+        let attempts = 0;
 
-        for (let i = 0; i < numBlackHoles; i++) {
-            let placed = false;
-            let attempts = 0;
+        while (!placed && attempts < 100) {
+            const row = Math.floor(Math.random() * 7);
+            const col = Math.floor(Math.random() * 11);
 
-            while (!placed && attempts < 100) {
-                const row = Math.floor(Math.random() * 7);
-                const col = Math.floor(Math.random() * 11);
-
-                // 빈 칸인지 확인
-                if (!gameState.questionerBoard[row][col]) {
-                    placePlanetOnBoard(gameState.questionerBoard, row, col, 'black-hole', blackHolePlanet, 0);
-                    gameState.blackHoles.push({ row, col });
-                    placed = true;
-                }
-
-                attempts++;
+            // 빈 칸인지 확인
+            if (!gameState.questionerBoard[row][col]) {
+                placePlanetOnBoard(gameState.questionerBoard, row, col, 'black-hole', blackHolePlanet, 0);
+                gameState.blackHoles.push({ row, col });
+                placed = true;
             }
 
-            if (!placed) {
-                console.warn(`Failed to place black hole ${i + 1}`);
-            }
+            attempts++;
+        }
+
+        if (!placed) {
+            console.warn(`Failed to place black hole`);
         }
     }
 
