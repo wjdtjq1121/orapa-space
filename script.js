@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.7.0";
+const GAME_VERSION = "1.8.0";
 
 // 게임 상태 관리
 const gameState = {
@@ -971,20 +971,16 @@ function fireLaser() {
 }
 
 // 레이저 경로 계산
-// 인접한 블랙홀 확인 (8방향)
-function checkAdjacentBlackHole(row, col) {
-    const directions = [
-        { row: row - 1, col: col, dir: 'top' },           // 위
-        { row: row + 1, col: col, dir: 'bottom' },        // 아래
-        { row: row, col: col - 1, dir: 'left' },          // 왼쪽
-        { row: row, col: col + 1, dir: 'right' },         // 오른쪽
+// 대각선 방향에서 블랙홀 굴절 확인 (4개 대각선만)
+function checkDiagonalBlackHole(row, col) {
+    const diagonalDirections = [
         { row: row - 1, col: col - 1, dir: 'top-left' },     // 왼쪽 위
         { row: row - 1, col: col + 1, dir: 'top-right' },    // 오른쪽 위
         { row: row + 1, col: col - 1, dir: 'bottom-left' },  // 왼쪽 아래
         { row: row + 1, col: col + 1, dir: 'bottom-right' }  // 오른쪽 아래
     ];
 
-    for (const adj of directions) {
+    for (const adj of diagonalDirections) {
         if (adj.row >= 0 && adj.row <= 6 && adj.col >= 0 && adj.col <= 10) {
             const cell = gameState.questionerBoard[adj.row][adj.col];
             if (cell && cell.type === 'black-hole') {
@@ -1211,15 +1207,15 @@ function calculateLaserPath(direction, startRow, startCol, color) {
             path.push({ row: currentRow, col: currentCol, color: currentMixedColor, type: 'pass' });
             console.log(`빈 공간 통과: (${currentRow}, ${currentCol})`);
 
-            // 블랙홀 굴절 체크 (한 번만)
+            // 블랙홀 대각선 굴절 체크 (한 번만)
             if (!hasRefracted) {
-                // 인접한 8방향에 블랙홀이 있는지 확인
-                const adjacentBlackHole = checkAdjacentBlackHole(currentRow, currentCol);
-                if (adjacentBlackHole) {
-                    console.log(`🕳️ 블랙홀 굴절 발생: (${currentRow}, ${currentCol}), 블랙홀 위치: (${adjacentBlackHole.row}, ${adjacentBlackHole.col})`);
+                // 대각선 4방향에 블랙홀이 있는지 확인
+                const diagonalBlackHole = checkDiagonalBlackHole(currentRow, currentCol);
+                if (diagonalBlackHole) {
+                    console.log(`🕳️ 블랙홀 대각선 굴절 발생: (${currentRow}, ${currentCol}), 블랙홀 위치: (${diagonalBlackHole.row}, ${diagonalBlackHole.col})`);
                     console.log(`굴절 전 방향: dirRow=${dirRow}, dirCol=${dirCol}`);
                     // 블랙홀 방향으로 90도 굴절
-                    const newDirection = bendTowardBlackHole(dirRow, dirCol, adjacentBlackHole, currentRow, currentCol);
+                    const newDirection = bendTowardBlackHole(dirRow, dirCol, diagonalBlackHole, currentRow, currentCol);
                     dirRow = newDirection.dirRow;
                     dirCol = newDirection.dirCol;
                     console.log(`굴절 후 방향: dirRow=${dirRow}, dirCol=${dirCol}`);
@@ -1236,7 +1232,7 @@ function calculateLaserPath(direction, startRow, startCol, color) {
                         }
                     }
                 } else {
-                    console.log(`블랙홀 체크: (${currentRow}, ${currentCol}) - 인접 블랙홀 없음`);
+                    console.log(`블랙홀 대각선 체크: (${currentRow}, ${currentCol}) - 대각선 블랙홀 없음`);
                 }
             } else {
                 console.log(`블랙홀 굴절 이미 사용됨: (${currentRow}, ${currentCol})`);
