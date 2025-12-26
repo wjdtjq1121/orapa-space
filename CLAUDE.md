@@ -1,11 +1,82 @@
 # ORAPA SPACE - 개발 가이드
 
 ## 현재 버전
-**Version: 1.9.0** (2025-12-26)
+**Version: 1.9.1** (2025-12-26)
+
+---
+
+## 🤖 Claude Code 자동 워크플로우
+
+**중요: 모든 코드 수정 후 다음 단계를 자동으로 수행해야 합니다!**
+
+### 자동 수행 단계 (필수)
+
+사용자가 코드 수정을 요청하고 수정이 완료되면, **무조건 다음 순서대로 자동 실행**:
+
+1. **버전 번호 결정**
+   - MAJOR.MINOR.PATCH 형식
+   - 버그 수정/로직 개선: PATCH 증가 (예: 1.9.0 → 1.9.1)
+   - 새 기능 추가: MINOR 증가 (예: 1.9.1 → 1.10.0)
+   - 호환성 깨지는 변경: MAJOR 증가 (예: 1.10.0 → 2.0.0)
+
+2. **CLAUDE.md 업데이트**
+   - 맨 위 "현재 버전" 변경
+   - "버전 히스토리"에 새 버전 섹션 추가 (날짜 포함)
+   - 주요 변경사항 bullet point로 기록
+
+3. **script.js 업데이트**
+   ```javascript
+   const GAME_VERSION = "X.Y.Z";  // 새 버전으로 변경
+   ```
+
+4. **index.html 업데이트**
+   ```html
+   <script src="script.js?v=X.Y.Z"></script>  <!-- 캐시 버스팅 버전 변경 -->
+   ```
+
+5. **Git Commit & Push (자동)**
+   ```bash
+   git add CLAUDE.md script.js index.html [수정된 다른 파일들]
+   git commit -m "$(cat <<'EOF'
+   <type>: <간결한 요약> (vX.Y.Z)
+
+   - 변경사항 1
+   - 변경사항 2
+   - 변경사항 3
+
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+   Co-Authored-By: Claude <noreply@anthropic.com>
+   EOF
+   )"
+   git push
+   ```
+
+### Commit Type 자동 선택 규칙
+- `fix:` - 버그 수정, 로직 개선, 오류 해결
+- `feat:` - 새로운 기능 추가
+- `refactor:` - 코드 리팩토링 (기능 변경 없음)
+- `perf:` - 성능 개선
+- `docs:` - 문서만 수정
+- `style:` - UI/UX 스타일 변경
+
+### ⚠️ 중요 사항
+- 사용자가 코드 수정을 요청하면, 수정 완료 후 **반드시 위 5단계를 모두 자동 실행**
+- 사용자가 "git push하지 마" 또는 "버전 업데이트 건너뛰어"라고 명시하지 않는 한, **무조건 실행**
+- GitHub Pages는 push해야만 https://wjdtjq1121.github.io/orapa-space/ 에 반영됨
+- 우측 상단 버전은 `updateGameVersion()` 함수가 자동으로 표시
 
 ---
 
 ## 버전 히스토리
+
+### v1.9.1 (2025-12-26)
+- 📚 **자동 워크플로우 가이드 추가**
+  - CLAUDE.md에 "🤖 Claude Code 자동 워크플로우" 섹션 추가
+  - 코드 수정 시 자동으로 버전 업데이트 및 git push 수행하도록 명확한 지침 추가
+  - 버전 번호 결정 규칙 (MAJOR.MINOR.PATCH) 명시
+  - Commit Type 자동 선택 규칙 추가
+  - 새 세션에서도 자동화된 배포 프로세스 보장
 
 ### v1.9.0 (2025-12-26)
 - 🔧 **사다리꼴/링 행성 반사 로직 수정** (rotation=90/270)
@@ -200,36 +271,10 @@ orapa-space/
 
 ## 버전 업데이트 방법
 
-### 1. CLAUDE.md 파일 업데이트
-- 버전 번호 변경 (상단 "현재 버전")
-- 버전 히스토리에 새 버전 추가
-- 주요 변경사항 기록
+**⚠️ 중요: 버전 업데이트는 자동으로 처리됩니다!**
 
-### 2. script.js에서 버전 업데이트
-```javascript
-const GAME_VERSION = "1.5.0";  // 이 값을 변경
-```
-
-### 3. index.html에서 캐시 버스팅 버전 업데이트
-```html
-<script src="script.js?v=1.5.0"></script>  <!-- 쿼리 파라미터 버전 변경 -->
-```
-- **중요**: F5만 눌러도 업데이트를 확인할 수 있도록 버전 파라미터 필수!
-- Ctrl+Shift+F5 없이도 최신 코드 로드 가능
-
-### 4. 자동 반영
-- `updateGameVersion()` 함수가 자동으로 우측 상단 버전 표시 업데이트
-
-### 5. ⚠️ **중요: GitHub Pages에 반영**
-- **모든 수정 후 반드시 git push 필수!**
-- GitHub Pages는 push해야만 업데이트됨
-- 로컬 수정만으로는 https://wjdtjq1121.github.io/orapa-space/ 에 반영 안 됨
-
-```bash
-git add .
-git commit -m "feat: 변경사항 설명"
-git push
-```
+코드 수정 후 상단의 **"🤖 Claude Code 자동 워크플로우"** 섹션 참조.
+Claude가 자동으로 버전 번호 결정, 파일 업데이트, git push까지 수행합니다.
 
 ---
 
