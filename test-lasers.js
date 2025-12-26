@@ -143,7 +143,7 @@ function getPositionLabel(direction, row, col) {
 }
 
 // 대각선 블랙홀 체크
-function checkDiagonalBlackHole(row, col) {
+function checkDiagonalBlackHole(row, col, dirRow, dirCol) {
     const diagonalDirections = [
         { row: row - 1, col: col - 1, dir: 'top-left' },
         { row: row - 1, col: col + 1, dir: 'top-right' },
@@ -154,7 +154,16 @@ function checkDiagonalBlackHole(row, col) {
         if (adj.row >= 0 && adj.row <= 6 && adj.col >= 0 && adj.col <= 10) {
             const cell = questionerBoard[adj.row][adj.col];
             if (cell && cell.type === 'black-hole') {
-                return { row: adj.row, col: adj.col, direction: adj.dir };
+                // OUTER EDGE 체크: 블랙홀이 레이저 진행 방향의 "뒤쪽" 대각선에 있어야 굴절 발생
+                const isOuterEdge =
+                    (dirRow > 0 && adj.row < row) ||  // 아래로 진행 중, 블랙홀이 위쪽 대각선
+                    (dirRow < 0 && adj.row > row) ||  // 위로 진행 중, 블랙홀이 아래쪽 대각선
+                    (dirCol > 0 && adj.col < col) ||  // 오른쪽 진행 중, 블랙홀이 왼쪽 대각선
+                    (dirCol < 0 && adj.col > col);    // 왼쪽 진행 중, 블랙홀이 오른쪽 대각선
+
+                if (isOuterEdge) {
+                    return { row: adj.row, col: adj.col, direction: adj.dir };
+                }
             }
         }
     }
@@ -411,7 +420,7 @@ function calculateLaserPath(direction, startRow, startCol) {
 
             // 블랙홀 대각선 굴절 체크 (한 번만, 행성 반사 직후 첫 칸이 아닐 때, 그리고 진입 후 최소 1칸 이동 후)
             if (!hasRefracted && lastHitCell === null && steps >= 1) {
-                const diagonalBlackHole = checkDiagonalBlackHole(currentRow, currentCol);
+                const diagonalBlackHole = checkDiagonalBlackHole(currentRow, currentCol, dirRow, dirCol);
                 if (diagonalBlackHole) {
                     const newDirection = bendTowardBlackHole(dirRow, dirCol, diagonalBlackHole, currentRow, currentCol);
                     dirRow = newDirection.dirRow;

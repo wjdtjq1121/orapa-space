@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.9.2";
+const GAME_VERSION = "1.9.3";
 
 // 게임 상태 관리
 const gameState = {
@@ -972,7 +972,7 @@ function fireLaser() {
 
 // 레이저 경로 계산
 // 대각선 방향에서 블랙홀 굴절 확인 (4개 대각선만)
-function checkDiagonalBlackHole(row, col) {
+function checkDiagonalBlackHole(row, col, dirRow, dirCol) {
     const diagonalDirections = [
         { row: row - 1, col: col - 1, dir: 'top-left' },     // 왼쪽 위
         { row: row - 1, col: col + 1, dir: 'top-right' },    // 오른쪽 위
@@ -984,7 +984,17 @@ function checkDiagonalBlackHole(row, col) {
         if (adj.row >= 0 && adj.row <= 6 && adj.col >= 0 && adj.col <= 10) {
             const cell = gameState.questionerBoard[adj.row][adj.col];
             if (cell && cell.type === 'black-hole') {
-                return { row: adj.row, col: adj.col, direction: adj.dir };
+                // ⚠️ OUTER EDGE 체크: 블랙홀이 레이저 진행 방향의 "뒤쪽" 대각선에 있어야 굴절 발생
+                // (레이저가 블랙홀을 지나친 후에만 굴절)
+                const isOuterEdge =
+                    (dirRow > 0 && adj.row < row) ||  // 아래로 진행 중, 블랙홀이 위쪽 대각선
+                    (dirRow < 0 && adj.row > row) ||  // 위로 진행 중, 블랙홀이 아래쪽 대각선
+                    (dirCol > 0 && adj.col < col) ||  // 오른쪽 진행 중, 블랙홀이 왼쪽 대각선
+                    (dirCol < 0 && adj.col > col);    // 왼쪽 진행 중, 블랙홀이 오른쪽 대각선
+
+                if (isOuterEdge) {
+                    return { row: adj.row, col: adj.col, direction: adj.dir };
+                }
             }
         }
     }
@@ -1212,8 +1222,8 @@ function calculateLaserPath(direction, startRow, startCol, color) {
 
             // 블랙홀 대각선 굴절 체크 (한 번만, 행성 반사 직후 첫 칸이 아닐 때, 그리고 진입 후 최소 1칸 이동 후)
             if (!hasRefracted && lastHitCell === null && steps >= 1) {
-                // 대각선 4방향에 블랙홀이 있는지 확인
-                const diagonalBlackHole = checkDiagonalBlackHole(currentRow, currentCol);
+                // 대각선 4방향에 블랙홀이 있는지 확인 (OUTER EDGE만 - 뒤쪽 대각선)
+                const diagonalBlackHole = checkDiagonalBlackHole(currentRow, currentCol, dirRow, dirCol);
                 if (diagonalBlackHole) {
                     console.log(`🕳️ 블랙홀 대각선 굴절 발생: (${currentRow}, ${currentCol}), 블랙홀 위치: (${diagonalBlackHole.row}, ${diagonalBlackHole.col})`);
                     console.log(`굴절 전 방향: dirRow=${dirRow}, dirCol=${dirCol}`);
