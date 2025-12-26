@@ -329,6 +329,7 @@ function calculateLaserPath(direction, startRow, startCol) {
     let steps = 0;
     let lastHitCell = null;
     let hasRefracted = false;
+    let emptySpacesSinceReflection = 0;
 
     path.push({ row: currentRow, col: currentCol, color: 'none', type: 'entry' });
 
@@ -409,6 +410,7 @@ function calculateLaserPath(direction, startRow, startCol) {
                 dirRow = reflection.dirRow;
                 dirCol = reflection.dirCol;
                 lastHitCell = currentCellKey;
+                emptySpacesSinceReflection = 0;
             } else {
                 const finalColor = mixColorsArray(collectedColors);
                 path.push({ row: currentRow, col: currentCol, color: finalColor, type: 'blocked' });
@@ -417,6 +419,14 @@ function calculateLaserPath(direction, startRow, startCol) {
         } else {
             const currentMixedColor = mixColorsArray(collectedColors);
             path.push({ row: currentRow, col: currentCol, color: currentMixedColor, type: 'pass' });
+
+            // 행성 반사 직후 빈 공간 카운터 증가 및 lastHitCell 리셋
+            if (lastHitCell !== null) {
+                emptySpacesSinceReflection++;
+                if (emptySpacesSinceReflection >= 1) {
+                    lastHitCell = null;
+                }
+            }
 
             // 블랙홀 대각선 굴절 체크 (한 번만, 행성 반사 직후 첫 칸이 아닐 때, 그리고 진입 후 최소 1칸 이동 후)
             if (!hasRefracted && lastHitCell === null && steps >= 1) {

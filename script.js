@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.9.3";
+const GAME_VERSION = "1.9.4";
 
 // 게임 상태 관리
 const gameState = {
@@ -1081,6 +1081,7 @@ function calculateLaserPath(direction, startRow, startCol, color) {
     let steps = 0;
     let lastHitCell = null; // 마지막으로 충돌한 셀 위치 추적 (row,col)
     let hasRefracted = false; // 블랙홀 굴절 여부 (한 번만 굴절)
+    let emptySpacesSinceReflection = 0; // 행성 반사 후 지나간 빈 공간 수
 
     path.push({ row: currentRow, col: currentCol, color: 'none', type: 'entry' });
     console.log(`진입점: (${currentRow}, ${currentCol})`);
@@ -1202,6 +1203,7 @@ function calculateLaserPath(direction, startRow, startCol, color) {
 
                 // 이 셀을 마지막 충돌 셀로 기록
                 lastHitCell = currentCellKey;
+                emptySpacesSinceReflection = 0; // 반사 후 빈 공간 카운터 리셋
             } else {
                 // 비반사 행성 - 레이저 차단
                 const finalColor = mixColorsArray(collectedColors);
@@ -1219,6 +1221,15 @@ function calculateLaserPath(direction, startRow, startCol, color) {
             const currentMixedColor = mixColorsArray(collectedColors);
             path.push({ row: currentRow, col: currentCol, color: currentMixedColor, type: 'pass' });
             console.log(`빈 공간 통과: (${currentRow}, ${currentCol})`);
+
+            // 행성 반사 직후 빈 공간 카운터 증가 및 lastHitCell 리셋
+            if (lastHitCell !== null) {
+                emptySpacesSinceReflection++;
+                if (emptySpacesSinceReflection >= 1) {
+                    console.log(`행성 반사 후 ${emptySpacesSinceReflection}칸 경과 - lastHitCell 리셋`);
+                    lastHitCell = null;
+                }
+            }
 
             // 블랙홀 대각선 굴절 체크 (한 번만, 행성 반사 직후 첫 칸이 아닐 때, 그리고 진입 후 최소 1칸 이동 후)
             if (!hasRefracted && lastHitCell === null && steps >= 1) {
