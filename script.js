@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.8.0";
+const GAME_VERSION = "1.9.0";
 
 // 게임 상태 관리
 const gameState = {
@@ -1207,8 +1207,8 @@ function calculateLaserPath(direction, startRow, startCol, color) {
             path.push({ row: currentRow, col: currentCol, color: currentMixedColor, type: 'pass' });
             console.log(`빈 공간 통과: (${currentRow}, ${currentCol})`);
 
-            // 블랙홀 대각선 굴절 체크 (한 번만)
-            if (!hasRefracted) {
+            // 블랙홀 대각선 굴절 체크 (한 번만, 행성 반사 직후 첫 칸이 아닐 때, 그리고 진입 후 최소 1칸 이동 후)
+            if (!hasRefracted && lastHitCell === null && steps >= 1) {
                 // 대각선 4방향에 블랙홀이 있는지 확인
                 const diagonalBlackHole = checkDiagonalBlackHole(currentRow, currentCol);
                 if (diagonalBlackHole) {
@@ -1221,7 +1221,7 @@ function calculateLaserPath(direction, startRow, startCol, color) {
                     console.log(`굴절 후 방향: dirRow=${dirRow}, dirCol=${dirCol}`);
                     hasRefracted = true;
                     path[path.length - 1].type = 'refract'; // 굴절 표시
-                    
+
                     // 굴절 후 블랙홀로 향하는지 체크
                     const nextRow = currentRow + dirRow;
                     const nextCol = currentCol + dirCol;
@@ -1235,7 +1235,11 @@ function calculateLaserPath(direction, startRow, startCol, color) {
                     console.log(`블랙홀 대각선 체크: (${currentRow}, ${currentCol}) - 대각선 블랙홀 없음`);
                 }
             } else {
-                console.log(`블랙홀 굴절 이미 사용됨: (${currentRow}, ${currentCol})`);
+                if (lastHitCell !== null) {
+                    console.log(`행성 반사 직후 첫 칸: (${currentRow}, ${currentCol}) - 블랙홀 굴절 체크 건너뜀`);
+                } else {
+                    console.log(`블랙홀 굴절 이미 사용됨: (${currentRow}, ${currentCol})`);
+                }
             }
 
             // 마지막 충돌 기록 초기화
@@ -1281,10 +1285,10 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
         // 수평 이동 중 (왼쪽↔오른쪽)
         if (dirRow === 0 && dirCol !== 0) {
             if (relRow === 0) {
-                // 위쪽 셀에 맞음 → 위로 반사
+                // 위쪽 셀에 맞음 → 위로 반사 [원래 로직]
                 return { dirRow: -1, dirCol: 0 };
             } else {
-                // 아래쪽 셀에 맞음 → 아래로 반사
+                // 아래쪽 셀에 맞음 → 아래로 반사 [원래 로직]
                 return { dirRow: 1, dirCol: 0 };
             }
         }
@@ -1400,10 +1404,15 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     return { dirRow: -dirRow, dirCol: -dirCol };
                 }
             }
-            // 오른쪽에서 진입 (밑변)
+            // 오른쪽에서 진입
             else if (dirCol < 0 && dirRow === 0) {
-                // 모두 180도 반사
-                return { dirRow: -dirRow, dirCol: -dirCol };
+                if (relRow === 0 || relRow === 3) {
+                    // 양 끝 → 90도 반사 (상하로)
+                    return { dirRow: relRow === 0 ? -1 : 1, dirCol: 0 };
+                } else {
+                    // 중간 → 180도 반사
+                    return { dirRow: -dirRow, dirCol: -dirCol };
+                }
             }
             // 위에서 진입
             else if (dirRow > 0 && dirCol === 0) {
@@ -1411,8 +1420,8 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     // 왼쪽 열 → 90도 반사 (왼쪽으로)
                     return { dirRow: 0, dirCol: -1 };
                 } else {
-                    // 오른쪽 열 (밑변) → 180도 반사
-                    return { dirRow: -dirRow, dirCol: -dirCol };
+                    // 오른쪽 열 → 90도 반사 (오른쪽으로)
+                    return { dirRow: 0, dirCol: 1 };
                 }
             }
             // 아래에서 진입
@@ -1421,8 +1430,8 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     // 왼쪽 열 → 90도 반사 (왼쪽으로)
                     return { dirRow: 0, dirCol: -1 };
                 } else {
-                    // 오른쪽 열 (밑변) → 180도 반사
-                    return { dirRow: -dirRow, dirCol: -dirCol };
+                    // 오른쪽 열 → 90도 반사 (오른쪽으로)
+                    return { dirRow: 0, dirCol: 1 };
                 }
             }
         }
@@ -1458,8 +1467,13 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
             // 세로 배치 역방향 (2x4): 밑변이 왼쪽
             // 왼쪽에서 진입 (밑변)
             if (dirCol > 0 && dirRow === 0) {
-                // 모두 180도 반사
-                return { dirRow: -dirRow, dirCol: -dirCol };
+                if (relRow === 0 || relRow === 3) {
+                    // 양 끝 → 90도 반사 (상하로)
+                    return { dirRow: relRow === 0 ? -1 : 1, dirCol: 0 };
+                } else {
+                    // 중간 → 180도 반사
+                    return { dirRow: -dirRow, dirCol: -dirCol };
+                }
             }
             // 오른쪽에서 진입
             else if (dirCol < 0 && dirRow === 0) {
@@ -1471,14 +1485,24 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     return { dirRow: -dirRow, dirCol: -dirCol };
                 }
             }
-            // 상하 진입은 rotation=90과 유사하지만 반대
-            else if (dirCol === 0 && dirRow !== 0) {
+            // 위에서 진입
+            else if (dirRow > 0 && dirCol === 0) {
                 if (relCol === 1) {
                     // 오른쪽 열 → 90도 반사 (오른쪽으로)
                     return { dirRow: 0, dirCol: 1 };
                 } else {
-                    // 왼쪽 열 → 180도 반사
-                    return { dirRow: -dirRow, dirCol: -dirCol };
+                    // 왼쪽 열 → 90도 반사 (왼쪽으로)
+                    return { dirRow: 0, dirCol: -1 };
+                }
+            }
+            // 아래에서 진입
+            else if (dirRow < 0 && dirCol === 0) {
+                if (relCol === 1) {
+                    // 오른쪽 열 → 90도 반사 (오른쪽으로)
+                    return { dirRow: 0, dirCol: 1 };
+                } else {
+                    // 왼쪽 열 → 90도 반사 (왼쪽으로)
+                    return { dirRow: 0, dirCol: -1 };
                 }
             }
         }
