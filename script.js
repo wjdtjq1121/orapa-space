@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.9.1";
+const GAME_VERSION = "1.9.2";
 
 // 게임 상태 관리
 const gameState = {
@@ -1166,6 +1166,9 @@ function calculateLaserPath(direction, startRow, startCol, color) {
                 continue;
             }
 
+            // 새로운 행성과 충돌 - 이전 행성 반사 상태 초기화
+            lastHitCell = null;
+
             // 행성에서는 블랙홀 굴절 체크하지 않음 (행성 반사가 우선)
 
             // 행성 색상 수집 (다른 셀이면 같은 행성이라도 색상 수집)
@@ -1236,14 +1239,15 @@ function calculateLaserPath(direction, startRow, startCol, color) {
                 }
             } else {
                 if (lastHitCell !== null) {
-                    console.log(`행성 반사 직후 첫 칸: (${currentRow}, ${currentCol}) - 블랙홀 굴절 체크 건너뜀`);
-                } else {
+                    console.log(`행성 반사 직후: (${currentRow}, ${currentCol}) - 블랙홀 굴절 체크 건너뜀`);
+                } else if (hasRefracted) {
                     console.log(`블랙홀 굴절 이미 사용됨: (${currentRow}, ${currentCol})`);
+                } else {
+                    console.log(`진입 직후 (steps=${steps}): (${currentRow}, ${currentCol}) - 블랙홀 굴절 체크 건너뜀`);
                 }
             }
 
-            // 마지막 충돌 기록 초기화
-            lastHitCell = null;
+            // lastHitCell은 다음 행성을 만날 때까지 유지 (빈 공간에서 초기화하지 않음)
         }
 
         steps++;
