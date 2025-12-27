@@ -1,4 +1,4 @@
-# ORAPA SPACE - 개발 가이드
+# STAR LINKER - 개발 가이드
 
 ## 현재 버전
 **Version: 1.9.4** (2025-12-26)
