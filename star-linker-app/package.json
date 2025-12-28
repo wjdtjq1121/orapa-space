@@ -1,0 +1,34 @@
+{
+  "name": "star-linker",
+  "version": "1.9.4",
+  "description": "Star Linker - 우주 탐험 퍼즐 게임. 레이저로 숨겨진 행성을 찾는 논리 퍼즐 게임입니다.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -o",
+    "dev": "npx live-server --port=3000 --open=/",
+    "build": "echo 'Static files ready for deployment'",
+    "deploy": "gh-pages -d ."
+  },
+  "keywords": [
+    "game",
+    "puzzle",
+    "space",
+    "laser",
+    "planets",
+    "logic",
+    "star-linker",
+    "korean"
+  ],
+  "author": "Star Linker Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wjdtjq1121/orapa-space.git"
+  },
+  "homepage": "https://wjdtjq1121.github.io/orapa-space/",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2",
+    "gh-pages": "^6.1.0"
+  }
+}
