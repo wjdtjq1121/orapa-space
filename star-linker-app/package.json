@@ -27,8 +27,14 @@
   },
   "homepage": "https://wjdtjq1121.github.io/orapa-space/",
   "devDependencies": {
+    "gh-pages": "^6.1.0",
     "http-server": "^14.1.1",
-    "live-server": "^1.2.2",
-    "gh-pages": "^6.1.0"
+    "live-server": "^1.2.2"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0"
   }
 }
