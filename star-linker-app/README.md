@@ -67,8 +67,25 @@ Star Linker를 Android 앱으로 빌드하여 모바일 기기에 설치할 수 
 
 #### 사전 요구사항
 - **Node.js**: v18 이상 (v20 권장)
-- **Java Development Kit (JDK)**: v17 이상
-- **Android SDK**: Android Studio 설치 또는 command-line tools
+- **Java Development Kit (JDK)**: JDK 17 (필수!)
+  ```bash
+  # Ubuntu/Debian
+  sudo apt install openjdk-17-jdk
+
+  # macOS
+  brew install openjdk@17
+
+  # 버전 확인
+  javac -version  # 17.x.x가 나와야 함
+  ```
+- **Android Studio**: 최신 버전 설치 권장
+  - [다운로드](https://developer.android.com/studio)
+  - 설치 시 "Android SDK", "Android SDK Platform", "Android Virtual Device" 체크
+- **Android SDK**: Android Studio 설치 시 자동 설치됨
+  - SDK 경로 (일반적으로):
+    - Windows: `C:\Users\<사용자명>\AppData\Local\Android\Sdk`
+    - macOS: `~/Library/Android/sdk`
+    - Linux: `~/Android/Sdk`
 - **Gradle**: Android Studio에 포함됨
 
 #### 빌드 단계
@@ -83,7 +100,25 @@ Star Linker를 Android 앱으로 빌드하여 모바일 기기에 설치할 수 
    npm install
    ```
 
-3. **웹 파일 동기화 및 Capacitor 동기화**
+3. **Android SDK 경로 설정** (첫 빌드 시 한 번만)
+
+   `star-linker-app/android/local.properties` 파일 생성 또는 수정:
+   ```properties
+   # Linux/macOS 예시
+   sdk.dir=/home/<사용자명>/Android/Sdk
+
+   # Windows 예시 (백슬래시를 슬래시로 변경)
+   # sdk.dir=C:/Users/<사용자명>/AppData/Local/Android/Sdk
+   ```
+
+   또는 환경 변수 설정:
+   ```bash
+   # Linux/macOS (.bashrc 또는 .zshrc에 추가)
+   export ANDROID_HOME=$HOME/Android/Sdk
+   export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+   ```
+
+4. **웹 파일 동기화 및 Capacitor 동기화**
    ```bash
    npm run sync-android
    ```
@@ -91,7 +126,7 @@ Star Linker를 Android 앱으로 빌드하여 모바일 기기에 설치할 수 
    - 루트 디렉토리의 최신 파일(index.html, script.js, style.css)을 www 폴더로 복사
    - Capacitor를 통해 Android 프로젝트에 동기화
 
-4. **Android Studio에서 프로젝트 열기**
+5. **Android Studio에서 프로젝트 열기**
    ```bash
    npm run open-android
    ```
@@ -100,7 +135,7 @@ Star Linker를 Android 앱으로 빌드하여 모바일 기기에 설치할 수 
    npx cap open android
    ```
 
-5. **APK 빌드**
+6. **APK 빌드**
 
    **방법 1: Android Studio 사용 (권장)**
    - Android Studio에서 프로젝트가 열리면
@@ -128,7 +163,7 @@ Star Linker를 Android 앱으로 빌드하여 모바일 기기에 설치할 수 
    ./gradlew assembleRelease
    ```
 
-6. **APK 설치**
+7. **APK 설치**
    - 생성된 APK 파일을 Android 기기로 전송
    - 기기에서 APK 파일을 실행하여 설치
    - "알 수 없는 출처" 앱 설치 허용 필요
@@ -144,11 +179,27 @@ Star Linker를 Android 앱으로 빌드하여 모바일 기기에 설치할 수 
 해결: Node.js v18 이상을 사용하세요. (현재 Capacitor 6.x 사용 중, Node 18+ 필요)
 ```
 
-**문제: Android SDK 경로 찾을 수 없음**
-```bash
-# ANDROID_HOME 환경 변수 설정
-export ANDROID_HOME=$HOME/Android/Sdk
-export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+**문제: "SDK location not found" 오류**
+```
+원인: Android SDK 경로가 설정되지 않음
+해결:
+1. Android Studio를 설치하고 한 번 실행 (SDK 자동 설치)
+2. star-linker-app/android/local.properties 파일 생성:
+   sdk.dir=/home/<사용자명>/Android/Sdk  (Linux/macOS)
+   sdk.dir=C:/Users/<사용자명>/AppData/Local/Android/Sdk  (Windows)
+3. 또는 ANDROID_HOME 환경 변수 설정
+```
+
+**문제: "Could not resolve :capacitor-android" 오류**
+```
+원인: AGP (Android Gradle Plugin) 버전 불일치
+해결: 이미 수정됨 - build.gradle에서 AGP 버전 8.2.1 사용
+```
+
+**문제: "Toolchain installation does not provide JAVA_COMPILER" 오류**
+```
+원인: JDK 17이 아닌 다른 Java 버전 사용
+해결: 이미 수정됨 - gradle.properties에서 Java 17 명시
 ```
 
 **문제: Gradle 빌드 실패**
@@ -157,6 +208,11 @@ export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
 cd android
 ./gradlew clean
 ./gradlew assembleDebug
+```
+
+**문제: Android Studio에서 "Plugin with id 'com.android.application' not found" 오류**
+```
+해결: Android Studio의 File → Sync Project with Gradle Files 실행
 ```
 
 ## 🔧 기술 스택
