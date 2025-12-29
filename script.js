@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.9.4";
+const GAME_VERSION = "1.10.0";
 
 // 게임 상태 관리
 const gameState = {

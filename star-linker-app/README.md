@@ -61,11 +61,110 @@ npm run dev
 ### 브라우저에서 직접 플레이
 [Live Demo](https://wjdtjq1121.github.io/orapa-space/)
 
+### 📱 Android APK 빌드
+
+Star Linker를 Android 앱으로 빌드하여 모바일 기기에 설치할 수 있습니다.
+
+#### 사전 요구사항
+- **Node.js**: v18 이상 (v20 권장)
+- **Java Development Kit (JDK)**: v17 이상
+- **Android SDK**: Android Studio 설치 또는 command-line tools
+- **Gradle**: Android Studio에 포함됨
+
+#### 빌드 단계
+
+1. **프로젝트 폴더로 이동**
+   ```bash
+   cd orapa-space/star-linker-app
+   ```
+
+2. **의존성 설치**
+   ```bash
+   npm install
+   ```
+
+3. **웹 파일 동기화 및 Capacitor 동기화**
+   ```bash
+   npm run sync-android
+   ```
+   이 명령은 자동으로:
+   - 루트 디렉토리의 최신 파일(index.html, script.js, style.css)을 www 폴더로 복사
+   - Capacitor를 통해 Android 프로젝트에 동기화
+
+4. **Android Studio에서 프로젝트 열기**
+   ```bash
+   npm run open-android
+   ```
+   또는 수동으로:
+   ```bash
+   npx cap open android
+   ```
+
+5. **APK 빌드**
+
+   **방법 1: Android Studio 사용 (권장)**
+   - Android Studio에서 프로젝트가 열리면
+   - `Build` → `Build Bundle(s) / APK(s)` → `Build APK(s)` 선택
+   - 빌드 완료 후 `android/app/build/outputs/apk/debug/app-debug.apk` 생성됨
+
+   **방법 2: 커맨드 라인 사용**
+   ```bash
+   # 디버그 APK 빌드
+   npm run build-android
+   ```
+   또는
+   ```bash
+   cd android
+   ./gradlew assembleDebug
+   ```
+
+   **릴리즈 APK 빌드 (서명 필요)**
+   ```bash
+   npm run build-android-release
+   ```
+   또는
+   ```bash
+   cd android
+   ./gradlew assembleRelease
+   ```
+
+6. **APK 설치**
+   - 생성된 APK 파일을 Android 기기로 전송
+   - 기기에서 APK 파일을 실행하여 설치
+   - "알 수 없는 출처" 앱 설치 허용 필요
+
+#### 빌드 결과물 위치
+- **디버그 APK**: `android/app/build/outputs/apk/debug/app-debug.apk`
+- **릴리즈 APK**: `android/app/build/outputs/apk/release/app-release.apk`
+
+#### 문제 해결
+
+**문제: Capacitor CLI가 Node 버전 오류**
+```
+해결: Node.js v18 이상을 사용하세요. (현재 Capacitor 6.x 사용 중, Node 18+ 필요)
+```
+
+**문제: Android SDK 경로 찾을 수 없음**
+```bash
+# ANDROID_HOME 환경 변수 설정
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+```
+
+**문제: Gradle 빌드 실패**
+```bash
+# android 폴더에서 Gradle 정리 후 재빌드
+cd android
+./gradlew clean
+./gradlew assembleDebug
+```
+
 ## 🔧 기술 스택
 
 - **Frontend**: Vanilla HTML5, CSS3, JavaScript
 - **Styling**: CSS Grid, Flexbox, CSS Variables
 - **Animation**: CSS Transitions, Transform
+- **Mobile**: Capacitor 6.x (네이티브 Android/iOS 앱 지원)
 - **Build**: No build process (Pure vanilla)
 - **Deployment**: GitHub Pages
 
