@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.10.0";
+const GAME_VERSION = "1.10.3";
 
 // 게임 상태 관리
 const gameState = {
@@ -616,7 +616,7 @@ function renderPreviewPlanet(cell, planet, planetType, rotation, canPlace, actua
 
         // 사다리꼴 회전 적용
         if (planet.shape === 'trapezoid') {
-            planetEl.style.clipPath = 'polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%)';
+            planetEl.style.clipPath = 'polygon(25% 0%, 75% 0%, 100% 50%, 100% 100%, 0% 100%, 0% 50%)';
 
             if (rotation !== 0) {
                 if (rotation === 90 || rotation === 270) {
@@ -867,7 +867,7 @@ function renderBoard(boardId) {
                         const rotation = planetData.rotation || 0;
                         if (planetData.shape === 'trapezoid') {
                             // 기본 clip-path (밑변 아래)
-                            planetEl.style.clipPath = 'polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%)';
+                            planetEl.style.clipPath = 'polygon(25% 0%, 75% 0%, 100% 50%, 100% 100%, 0% 100%, 0% 50%)';
 
                             // CSS transform으로 회전 (90/270도는 scaleY 뒤집기 추가)
                             if (rotation !== 0) {
