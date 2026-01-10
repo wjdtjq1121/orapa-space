@@ -38,7 +38,7 @@ APP_NAME="Star Linker"
 TEAM_ID="3ZMPVRB243"
 PROVISIONING_PROFILE_UUID="7783c085-e96d-48d8-83a0-d57fb6ea3753"
 PROVISIONING_PROFILE_NAME="jsappstore.mobileprovision"
-PROVISIONING_PROFILE_PATH="/Users/jeongseophan/Desktop/jsappstore.mobileprovision"
+PROVISIONING_PROFILE_PATH="/Users/jeongseophan/Desktop/background/IOS_appstore/jsappstore.mobileprovision"
 
 # 빌드 경로
 ARCHIVE_PATH="/tmp/StarLinker.xcarchive"
@@ -271,7 +271,7 @@ echo ""
 echo -e "${YELLOW}🔐 Provisioning Profile 확인 중...${NC}"
 PROFILE_PATH="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/7783c085-e96d-48d8-83a0-d57fb6ea3753.mobileprovision"
 if [ ! -f "$PROFILE_PATH" ]; then
-    cp /Users/jeongseophan/Desktop/jsappstore.mobileprovision "$PROFILE_PATH"
+    cp /Users/jeongseophan/Desktop/background/IOS_appstore/jsappstore.mobileprovision "$PROFILE_PATH"
     echo -e "${GREEN}✅ Provisioning Profile 설치 완료${NC}"
 else
     echo -e "${GREEN}✅ Provisioning Profile 이미 설치됨${NC}"
@@ -469,7 +469,7 @@ Upload succeeded
 
 2. Desktop에서 재설치:
    ```bash
-   cp /Users/jeongseophan/Desktop/jsappstore.mobileprovision \
+   cp /Users/jeongseophan/Desktop/background/IOS_appstore/jsappstore.mobileprovision \
       "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/7783c085-e96d-48d8-83a0-d57fb6ea3753.mobileprovision"
    ```
 
@@ -515,8 +515,7 @@ CURRENT_PROJECT_VERSION = 3;  # 반드시 증가
 ### Provisioning Profile 위치
 
 이 파일들을 **절대 삭제하지 마세요**:
-- `/Users/jeongseophan/Desktop/jsappstore.mobileprovision` ⭐ 중요!
-- `/Users/jeongseophan/Desktop/StarLinker_AppStore.mobileprovision`
+- `/Users/jeongseophan/Desktop/background/IOS_appstore/jsappstore.mobileprovision` ⭐ 중요!
 
 ### Git 커밋 규칙
 
