@@ -215,6 +215,97 @@ cd android
 해결: Android Studio의 File → Sync Project with Gradle Files 실행
 ```
 
+### 📱 iOS 앱 빌드
+
+Star Linker를 iOS 앱으로 빌드하여 App Store에 배포할 수 있습니다.
+
+#### 사전 요구사항
+- **macOS**: Xcode는 macOS에서만 실행 가능
+- **Xcode**: 최신 버전 설치 (App Store에서 다운로드)
+- **Apple Developer Account**: App Store Connect 업로드 시 필요
+- **Node.js**: v18 이상 (v20 권장)
+
+#### 빌드 단계
+
+1. **프로젝트 폴더로 이동**
+   ```bash
+   cd orapa-space/star-linker-app
+   ```
+
+2. **의존성 설치**
+   ```bash
+   npm install
+   ```
+
+3. **웹 파일 동기화 및 Capacitor 동기화**
+   ```bash
+   npm run copy-web
+   npx cap sync ios
+   ```
+
+4. **Xcode에서 프로젝트 열기**
+   ```bash
+   npx cap open ios
+   ```
+
+5. **Xcode에서 빌드 설정**
+   - 왼쪽 프로젝트 네비게이터에서 `App` 선택
+   - `Signing & Capabilities` 탭에서:
+     - Team 선택 (Apple Developer Account 필요)
+     - Bundle Identifier 확인: `com.starlinker.app`
+   - `General` 탭에서:
+     - **Version**: 1.0.1 (이미 설정됨)
+     - **Build**: 2 (이미 설정됨)
+     - Deployment Target: iOS 15.0 이상
+
+6. **아카이브 빌드 (App Store 업로드용)**
+   - Xcode 메뉴: `Product` → `Archive`
+   - 빌드 완료 후 Organizer 창이 자동으로 열림
+   - 빌드된 아카이브 선택 후 `Distribute App` 클릭
+   - `App Store Connect` 선택 → `Upload` 선택
+   - 코드 서명 옵션 확인 후 `Upload` 클릭
+
+7. **App Store Connect에서 확인**
+   - [App Store Connect](https://appstoreconnect.apple.com/)에 로그인
+   - `나의 앱` → Star Linker 선택
+   - `TestFlight` 탭 또는 `App Store` 탭에서 빌드 확인
+   - 빌드 처리 시간: 보통 5-30분 소요
+
+#### 추가 팁 (Info.plist 설정)
+
+App Store Connect 질문을 생략하고 싶다면, Info.plist 파일에 다음 설정이 추가되어 있습니다:
+
+**Key**: `ITSAppUsesNonExemptEncryption`
+**Type**: Boolean
+**Value**: `NO`
+
+이 설정으로 앱을 제출할 때마다 매번 암호화 관련 질문에 수동으로 답변하지 않아도 됩니다. (이미 적용됨)
+
+#### 문제 해결
+
+**문제: "Code signing error" 또는 "Provisioning profile" 오류**
+```
+해결:
+1. Xcode → Preferences → Accounts에서 Apple ID 로그인
+2. 프로젝트 설정 → Signing & Capabilities에서 Team 선택
+3. "Automatically manage signing" 체크
+```
+
+**문제: "Archive" 옵션이 비활성화됨**
+```
+해결:
+1. Xcode 상단 장치 선택에서 "Any iOS Device (arm64)" 선택
+2. 시뮬레이터가 아닌 실제 장치용으로 빌드해야 아카이브 가능
+```
+
+**문제: App Store Connect 업로드 실패**
+```
+해결:
+1. Xcode → Window → Organizer에서 이전 아카이브 확인
+2. 버전 번호와 빌드 번호가 이전 업로드보다 높은지 확인
+3. 빌드 번호는 계속 증가해야 함 (예: 1, 2, 3, ...)
+```
+
 ## 🔧 기술 스택
 
 - **Frontend**: Vanilla HTML5, CSS3, JavaScript

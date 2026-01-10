@@ -1,6 +1,6 @@
 {
   "name": "star-linker",
-  "version": "1.10.1",
+  "version": "1.0.1",
   "description": "Star Linker - 우주 탐험 퍼즐 게임. 레이저로 숨겨진 행성을 찾는 논리 퍼즐 게임입니다.",
   "main": "index.html",
   "scripts": {
