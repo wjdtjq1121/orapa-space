@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.10.3";
+const GAME_VERSION = "1.10.4";
 
 // 게임 상태 관리
 const gameState = {
@@ -1380,21 +1380,10 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     return { dirRow: -dirRow, dirCol: -dirCol };
                 }
             }
-            // 아래에서 진입
+            // 아래에서 위로 진입 (밑변)
             else if (dirRow < 0 && dirCol === 0) {
-                if (relRow === 1) {
-                    // 밑변 → 180도 반사
-                    return { dirRow: -dirRow, dirCol: -dirCol };
-                } else {
-                    // 윗변 (relRow=0)
-                    if (relCol === 1 || relCol === 2) {
-                        // 중간 → 180도 반사
-                        return { dirRow: -dirRow, dirCol: -dirCol };
-                    } else {
-                        // 양 끝 → 90도 반사
-                        return { dirRow: 0, dirCol: relCol === 0 ? -1 : 1 };
-                    }
-                }
+                // 사다리꼴이므로 밑변에 먼저 충돌 → 무조건 180도 반사
+                return { dirRow: -dirRow, dirCol: -dirCol };
             }
             // 왼쪽에서 진입
             else if (dirCol > 0 && dirRow === 0) {
@@ -1419,6 +1408,8 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
         }
         else if (rotation === 90) {
             // 세로 배치 (2x4): 밑변이 오른쪽
+            // relCol=0: 왼쪽 열, relCol=1: 오른쪽 열 (밑변)
+
             // 왼쪽에서 진입
             if (dirCol > 0 && dirRow === 0) {
                 if (relRow === 0 || relRow === 3) {
@@ -1429,15 +1420,10 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     return { dirRow: -dirRow, dirCol: -dirCol };
                 }
             }
-            // 오른쪽에서 진입
+            // 오른쪽에서 왼쪽으로 진입 (밑변)
             else if (dirCol < 0 && dirRow === 0) {
-                if (relRow === 0 || relRow === 3) {
-                    // 양 끝 → 90도 반사 (상하로)
-                    return { dirRow: relRow === 0 ? -1 : 1, dirCol: 0 };
-                } else {
-                    // 중간 → 180도 반사
-                    return { dirRow: -dirRow, dirCol: -dirCol };
-                }
+                // 사다리꼴이므로 밑변(오른쪽)에 먼저 충돌 → 무조건 180도 반사
+                return { dirRow: -dirRow, dirCol: -dirCol };
             }
             // 위에서 진입
             else if (dirRow > 0 && dirCol === 0) {
@@ -1445,8 +1431,8 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     // 왼쪽 열 → 90도 반사 (왼쪽으로)
                     return { dirRow: 0, dirCol: -1 };
                 } else {
-                    // 오른쪽 열 → 90도 반사 (오른쪽으로)
-                    return { dirRow: 0, dirCol: 1 };
+                    // 오른쪽 열 (밑변 쪽) → 180도 반사
+                    return { dirRow: -dirRow, dirCol: -dirCol };
                 }
             }
             // 아래에서 진입
@@ -1455,8 +1441,8 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     // 왼쪽 열 → 90도 반사 (왼쪽으로)
                     return { dirRow: 0, dirCol: -1 };
                 } else {
-                    // 오른쪽 열 → 90도 반사 (오른쪽으로)
-                    return { dirRow: 0, dirCol: 1 };
+                    // 오른쪽 열 (밑변 쪽) → 180도 반사
+                    return { dirRow: -dirRow, dirCol: -dirCol };
                 }
             }
         }
@@ -1490,15 +1476,12 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
         }
         else if (rotation === 270) {
             // 세로 배치 역방향 (2x4): 밑변이 왼쪽
-            // 왼쪽에서 진입 (밑변)
+            // relCol=0: 왼쪽 열 (밑변), relCol=1: 오른쪽 열
+
+            // 왼쪽에서 오른쪽으로 진입 (밑변)
             if (dirCol > 0 && dirRow === 0) {
-                if (relRow === 0 || relRow === 3) {
-                    // 양 끝 → 90도 반사 (상하로)
-                    return { dirRow: relRow === 0 ? -1 : 1, dirCol: 0 };
-                } else {
-                    // 중간 → 180도 반사
-                    return { dirRow: -dirRow, dirCol: -dirCol };
-                }
+                // 사다리꼴이므로 밑변(왼쪽)에 먼저 충돌 → 무조건 180도 반사
+                return { dirRow: -dirRow, dirCol: -dirCol };
             }
             // 오른쪽에서 진입
             else if (dirCol < 0 && dirRow === 0) {
@@ -1516,8 +1499,8 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     // 오른쪽 열 → 90도 반사 (오른쪽으로)
                     return { dirRow: 0, dirCol: 1 };
                 } else {
-                    // 왼쪽 열 → 90도 반사 (왼쪽으로)
-                    return { dirRow: 0, dirCol: -1 };
+                    // 왼쪽 열 (밑변 쪽) → 180도 반사
+                    return { dirRow: -dirRow, dirCol: -dirCol };
                 }
             }
             // 아래에서 진입
@@ -1526,8 +1509,8 @@ function calculateReflection(dirRow, dirCol, shape, currentRow, currentCol, orig
                     // 오른쪽 열 → 90도 반사 (오른쪽으로)
                     return { dirRow: 0, dirCol: 1 };
                 } else {
-                    // 왼쪽 열 → 90도 반사 (왼쪽으로)
-                    return { dirRow: 0, dirCol: -1 };
+                    // 왼쪽 열 (밑변 쪽) → 180도 반사
+                    return { dirRow: -dirRow, dirCol: -dirCol };
                 }
             }
         }
