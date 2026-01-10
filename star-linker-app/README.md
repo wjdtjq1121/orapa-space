@@ -306,6 +306,86 @@ App Store Connect 질문을 생략하고 싶다면, Info.plist 파일에 다음 
 3. 빌드 번호는 계속 증가해야 함 (예: 1, 2, 3, ...)
 ```
 
+#### 고급: 커맨드라인으로 빌드 및 업로드
+
+Xcode GUI 대신 커맨드라인으로 빌드하고 업로드할 수도 있습니다.
+
+**1. Archive 빌드**
+```bash
+cd star-linker-app
+xcodebuild -project "ios/App/App.xcodeproj" \
+  -scheme App \
+  -configuration Release \
+  archive \
+  -archivePath "/tmp/StarLinker.xcarchive"
+```
+
+**2. ExportOptions.plist 생성**
+```bash
+cat > /tmp/ExportOptions.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+    <key>uploadBitcode</key>
+    <false/>
+    <key>uploadSymbols</key>
+    <true/>
+    <key>compileBitcode</key>
+    <false/>
+    <key>destination</key>
+    <string>upload</string>
+</dict>
+</plist>
+EOF
+```
+
+**3. App Store Connect 업로드**
+```bash
+xcodebuild -exportArchive \
+  -archivePath "/tmp/StarLinker.xcarchive" \
+  -exportPath "/tmp/" \
+  -exportOptionsPlist "/tmp/ExportOptions.plist"
+```
+
+성공 시: `** EXPORT SUCCEEDED **` 메시지와 함께 App Store Connect에 자동 업로드됩니다.
+
+**전체 자동화 스크립트**
+```bash
+#!/bin/bash
+cd star-linker-app
+
+echo "📦 iOS Archive 빌드 시작..."
+xcodebuild -project "ios/App/App.xcodeproj" \
+  -scheme App \
+  -configuration Release \
+  archive \
+  -archivePath "/tmp/StarLinker.xcarchive"
+
+if [ $? -ne 0 ]; then
+  echo "❌ Archive 빌드 실패"
+  exit 1
+fi
+
+echo "🚀 App Store Connect 업로드 시작..."
+xcodebuild -exportArchive \
+  -archivePath "/tmp/StarLinker.xcarchive" \
+  -exportPath "/tmp/" \
+  -exportOptionsPlist "/tmp/ExportOptions.plist"
+
+if [ $? -eq 0 ]; then
+  echo "✅ App Store Connect 업로드 성공!"
+  echo "📱 10-15분 후 App Store Connect에서 빌드를 확인하세요."
+else
+  echo "❌ 업로드 실패"
+  exit 1
+fi
+```
+
+> **참고**: 더 상세한 인증서 설정, Distribution 프로필 생성, Manual Signing 설정 등은 `ios-publish.md` 파일을 참조하세요.
+
 ## 🔧 기술 스택
 
 - **Frontend**: Vanilla HTML5, CSS3, JavaScript
