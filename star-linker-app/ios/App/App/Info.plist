@@ -49,5 +49,7 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>사용자의 관심사에 맞는 맞춤형 광고를 제공하기 위해 활동 데이터를 사용합니다.</string>
 </dict>
 </plist>

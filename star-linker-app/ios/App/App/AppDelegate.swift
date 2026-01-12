@@ -1,5 +1,7 @@
 import UIKit
 import Capacitor
+import AppTrackingTransparency
+import AdSupport
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -27,6 +29,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+
+        // ATT (App Tracking Transparency) 권한 요청
+        if #available(iOS 14, *) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                ATTrackingManager.requestTrackingAuthorization { status in
+                    switch status {
+                    case .authorized:
+                        print("✅ ATT 권한 허용됨")
+                        // IDFA 사용 가능
+                        let idfa = ASIdentifierManager.shared().advertisingIdentifier
+                        print("📱 IDFA: \(idfa)")
+                    case .denied:
+                        print("❌ ATT 권한 거부됨")
+                    case .notDetermined:
+                        print("⏳ ATT 권한 아직 결정되지 않음")
+                    case .restricted:
+                        print("🚫 ATT 권한 제한됨")
+                    @unknown default:
+                        print("❓ ATT 권한 알 수 없는 상태")
+                    }
+                }
+            }
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
