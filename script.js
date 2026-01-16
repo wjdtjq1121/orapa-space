@@ -1,23 +1,23 @@
 // 버전 정보
-const GAME_VERSION = "1.11.2";
+const GAME_VERSION = "1.11.3";
 
 // AdMob 관련 설정
 let AdMobAvailable = false;
 const AdMobConfig = {
     // 실제 광고 ID (AdMob 콘솔에서 생성)
-    bannerAdId: {
-        android: 'ca-app-pub-4573861868242811/3896270480', // 실제 배너 ID
-        ios: 'ca-app-pub-4573861868242811/3896270480'      // iOS도 동일 ID 사용
+    appOpenAdId: {
+        android: 'ca-app-pub-4573861868242811/9365037826', // 앱 오프닝 광고 ID
+        ios: 'ca-app-pub-4573861868242811/9365037826'      // iOS도 동일 ID 사용
     },
     interstitialAdId: {
-        android: 'ca-app-pub-4573861868242811/8408207048', // 실제 전면 ID
+        android: 'ca-app-pub-4573861868242811/8408207048', // 전면 광고 ID
         ios: 'ca-app-pub-4573861868242811/8408207048'      // iOS도 동일 ID 사용
     },
 
     // 테스트 ID (테스트 시 아래 주석 해제)
-    // bannerAdId: {
-    //     android: 'ca-app-pub-3940256099942544/6300978111',
-    //     ios: 'ca-app-pub-3940256099942544/2934735716'
+    // appOpenAdId: {
+    //     android: 'ca-app-pub-3940256099942544/3419835294',
+    //     ios: 'ca-app-pub-3940256099942544/5662855259'
     // },
     // interstitialAdId: {
     //     android: 'ca-app-pub-3940256099942544/1033173712',
@@ -40,14 +40,14 @@ async function initializeAdMob() {
         await AdMob.initialize({
             requestTrackingAuthorization: true,
             testingDevices: ['YOUR_DEVICE_ID'], // 테스트 기기 ID
-            initializeForTesting: true // 테스트 모드
+            initializeForTesting: false // 실제 광고 모드
         });
 
         console.log('AdMob initialized successfully');
         AdMobAvailable = true;
 
-        // 배너 광고 표시
-        await showBannerAd();
+        // 앱 오프닝 광고 표시
+        await showAppOpenAd();
 
         return true;
     } catch (error) {
@@ -56,38 +56,25 @@ async function initializeAdMob() {
     }
 }
 
-// 배너 광고 표시
-async function showBannerAd() {
-    if (!AdMobAvailable) return;
-
-    try {
-        const { AdMob, BannerAdPosition, BannerAdSize } = Capacitor.Plugins;
-        const platform = Capacitor.getPlatform();
-        const adId = platform === 'ios' ? AdMobConfig.bannerAdId.ios : AdMobConfig.bannerAdId.android;
-
-        await AdMob.showBanner({
-            adId: adId,
-            adSize: BannerAdSize.BANNER, // 320x50
-            position: BannerAdPosition.BOTTOM_CENTER,
-            margin: 0
-        });
-
-        console.log('Banner ad shown');
-    } catch (error) {
-        console.error('Failed to show banner ad:', error);
-    }
-}
-
-// 배너 광고 숨기기
-async function hideBannerAd() {
+// 앱 오프닝 광고 표시
+async function showAppOpenAd() {
     if (!AdMobAvailable) return;
 
     try {
         const { AdMob } = Capacitor.Plugins;
-        await AdMob.hideBanner();
-        console.log('Banner ad hidden');
+        const platform = Capacitor.getPlatform();
+        const adId = platform === 'ios' ? AdMobConfig.appOpenAdId.ios : AdMobConfig.appOpenAdId.android;
+
+        // 앱 오프닝 광고 준비
+        await AdMob.prepareAppOpenAd({
+            adId: adId
+        });
+
+        // 앱 오프닝 광고 표시
+        await AdMob.showAppOpenAd();
+        console.log('App open ad shown');
     } catch (error) {
-        console.error('Failed to hide banner ad:', error);
+        console.error('Failed to show app open ad:', error);
     }
 }
 
@@ -110,41 +97,6 @@ async function showInterstitialAd() {
         console.log('Interstitial ad shown');
     } catch (error) {
         console.error('Failed to show interstitial ad:', error);
-    }
-}
-
-// 보상형 광고 표시
-async function showRewardedAd() {
-    if (!AdMobAvailable) {
-        // 웹 환경에서는 광고 없이 바로 모드 전환
-        return true;
-    }
-
-    try {
-        const { AdMob } = Capacitor.Plugins;
-        const platform = Capacitor.getPlatform();
-        const adId = platform === 'ios' ? AdMobConfig.rewardedAdId.ios : AdMobConfig.rewardedAdId.android;
-
-        // 보상형 광고 준비
-        await AdMob.prepareRewardVideoAd({
-            adId: adId
-        });
-
-        // 보상형 광고 표시
-        const result = await AdMob.showRewardVideoAd();
-
-        // 보상 획득 여부 확인
-        if (result && result.rewarded) {
-            console.log('Rewarded ad completed');
-            return true;
-        } else {
-            console.log('Rewarded ad skipped');
-            return false;
-        }
-    } catch (error) {
-        console.error('Failed to show rewarded ad:', error);
-        // 광고 로드 실패 시에도 연습 모드 진입 허용
-        return true;
     }
 }
 
