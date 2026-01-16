@@ -1,35 +1,27 @@
 // 버전 정보
-const GAME_VERSION = "1.11.1";
+const GAME_VERSION = "1.11.2";
 
 // AdMob 관련 설정
 let AdMobAvailable = false;
 const AdMobConfig = {
-    // ⚠️ 주의: 실제 배포 시 AdMob 콘솔에서 생성한 광고 ID로 교체 필요
-    // 테스트 ID (Google 공식 테스트 ID)
+    // 실제 광고 ID (AdMob 콘솔에서 생성)
     bannerAdId: {
-        android: 'ca-app-pub-3940256099942544/6300978111', // 테스트 배너 ID
-        ios: 'ca-app-pub-3940256099942544/2934735716'
+        android: 'ca-app-pub-4573861868242811/3896270480', // 실제 배너 ID
+        ios: 'ca-app-pub-4573861868242811/3896270480'      // iOS도 동일 ID 사용
     },
     interstitialAdId: {
-        android: 'ca-app-pub-3940256099942544/1033173712', // 테스트 전면 ID
-        ios: 'ca-app-pub-3940256099942544/4411468910'
+        android: 'ca-app-pub-4573861868242811/8408207048', // 실제 전면 ID
+        ios: 'ca-app-pub-4573861868242811/8408207048'      // iOS도 동일 ID 사용
     },
-    rewardedAdId: {
-        android: 'ca-app-pub-3940256099942544/5224354917', // 테스트 보상형 ID
-        ios: 'ca-app-pub-3940256099942544/1712485313'
-    },
-    // 실제 배포 시 아래 주석 해제하고 실제 ID로 교체
+
+    // 테스트 ID (테스트 시 아래 주석 해제)
     // bannerAdId: {
-    //     android: 'ca-app-pub-6221756172772754/XXXXXXXXXX',
-    //     ios: 'ca-app-pub-6221756172772754/YYYYYYYYYY'
+    //     android: 'ca-app-pub-3940256099942544/6300978111',
+    //     ios: 'ca-app-pub-3940256099942544/2934735716'
     // },
     // interstitialAdId: {
-    //     android: 'ca-app-pub-6221756172772754/AAAAAAAAAA',
-    //     ios: 'ca-app-pub-6221756172772754/BBBBBBBBBB'
-    // },
-    // rewardedAdId: {
-    //     android: 'ca-app-pub-6221756172772754/CCCCCCCCCC',
-    //     ios: 'ca-app-pub-6221756172772754/DDDDDDDDDD'
+    //     android: 'ca-app-pub-3940256099942544/1033173712',
+    //     ios: 'ca-app-pub-3940256099942544/4411468910'
     // }
 };
 
