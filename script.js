@@ -1,5 +1,5 @@
 // 버전 정보
-const GAME_VERSION = "1.11.0";
+const GAME_VERSION = "1.11.1";
 
 // AdMob 관련 설정
 let AdMobAvailable = false;
@@ -3000,21 +3000,8 @@ function setupEventListeners() {
     document.getElementById('askCoordinateBtn').addEventListener('click', askCoordinate);
     document.getElementById('copyDebugInfo').addEventListener('click', copyDebugInfo);
 
-    document.getElementById('gameMode').addEventListener('change', async (e) => {
-        const newMode = e.target.value;
-
-        // 연습 모드로 전환 시 보상형 광고 표시
-        if (newMode === 'practice') {
-            const rewardGranted = await showRewardedAd();
-            if (!rewardGranted) {
-                // 광고를 시청하지 않으면 모드 변경 취소
-                e.target.value = gameState.mode;
-                alert('연습 모드를 사용하려면 광고를 시청해주세요.');
-                return;
-            }
-        }
-
-        gameState.mode = newMode;
+    document.getElementById('gameMode').addEventListener('change', (e) => {
+        gameState.mode = e.target.value;
         updateGameModeUI();
 
         // 싱글 플레이로 전환 시 자동 설정
