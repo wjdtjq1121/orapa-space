@@ -1,5 +1,160 @@
 // 버전 정보
-const GAME_VERSION = "1.10.4";
+const GAME_VERSION = "1.11.0";
+
+// AdMob 관련 설정
+let AdMobAvailable = false;
+const AdMobConfig = {
+    // ⚠️ 주의: 실제 배포 시 AdMob 콘솔에서 생성한 광고 ID로 교체 필요
+    // 테스트 ID (Google 공식 테스트 ID)
+    bannerAdId: {
+        android: 'ca-app-pub-3940256099942544/6300978111', // 테스트 배너 ID
+        ios: 'ca-app-pub-3940256099942544/2934735716'
+    },
+    interstitialAdId: {
+        android: 'ca-app-pub-3940256099942544/1033173712', // 테스트 전면 ID
+        ios: 'ca-app-pub-3940256099942544/4411468910'
+    },
+    rewardedAdId: {
+        android: 'ca-app-pub-3940256099942544/5224354917', // 테스트 보상형 ID
+        ios: 'ca-app-pub-3940256099942544/1712485313'
+    },
+    // 실제 배포 시 아래 주석 해제하고 실제 ID로 교체
+    // bannerAdId: {
+    //     android: 'ca-app-pub-6221756172772754/XXXXXXXXXX',
+    //     ios: 'ca-app-pub-6221756172772754/YYYYYYYYYY'
+    // },
+    // interstitialAdId: {
+    //     android: 'ca-app-pub-6221756172772754/AAAAAAAAAA',
+    //     ios: 'ca-app-pub-6221756172772754/BBBBBBBBBB'
+    // },
+    // rewardedAdId: {
+    //     android: 'ca-app-pub-6221756172772754/CCCCCCCCCC',
+    //     ios: 'ca-app-pub-6221756172772754/DDDDDDDDDD'
+    // }
+};
+
+// AdMob 초기화
+async function initializeAdMob() {
+    try {
+        // Capacitor가 로드되었는지 확인
+        if (typeof Capacitor === 'undefined' || !Capacitor.Plugins || !Capacitor.Plugins.AdMob) {
+            console.log('AdMob plugin not available (웹 환경)');
+            return false;
+        }
+
+        const { AdMob } = Capacitor.Plugins;
+
+        // AdMob 초기화
+        await AdMob.initialize({
+            requestTrackingAuthorization: true,
+            testingDevices: ['YOUR_DEVICE_ID'], // 테스트 기기 ID
+            initializeForTesting: true // 테스트 모드
+        });
+
+        console.log('AdMob initialized successfully');
+        AdMobAvailable = true;
+
+        // 배너 광고 표시
+        await showBannerAd();
+
+        return true;
+    } catch (error) {
+        console.error('AdMob initialization failed:', error);
+        return false;
+    }
+}
+
+// 배너 광고 표시
+async function showBannerAd() {
+    if (!AdMobAvailable) return;
+
+    try {
+        const { AdMob, BannerAdPosition, BannerAdSize } = Capacitor.Plugins;
+        const platform = Capacitor.getPlatform();
+        const adId = platform === 'ios' ? AdMobConfig.bannerAdId.ios : AdMobConfig.bannerAdId.android;
+
+        await AdMob.showBanner({
+            adId: adId,
+            adSize: BannerAdSize.BANNER, // 320x50
+            position: BannerAdPosition.BOTTOM_CENTER,
+            margin: 0
+        });
+
+        console.log('Banner ad shown');
+    } catch (error) {
+        console.error('Failed to show banner ad:', error);
+    }
+}
+
+// 배너 광고 숨기기
+async function hideBannerAd() {
+    if (!AdMobAvailable) return;
+
+    try {
+        const { AdMob } = Capacitor.Plugins;
+        await AdMob.hideBanner();
+        console.log('Banner ad hidden');
+    } catch (error) {
+        console.error('Failed to hide banner ad:', error);
+    }
+}
+
+// 전면 광고 준비 및 표시
+async function showInterstitialAd() {
+    if (!AdMobAvailable) return;
+
+    try {
+        const { AdMob } = Capacitor.Plugins;
+        const platform = Capacitor.getPlatform();
+        const adId = platform === 'ios' ? AdMobConfig.interstitialAdId.ios : AdMobConfig.interstitialAdId.android;
+
+        // 전면 광고 준비
+        await AdMob.prepareInterstitial({
+            adId: adId
+        });
+
+        // 전면 광고 표시
+        await AdMob.showInterstitial();
+        console.log('Interstitial ad shown');
+    } catch (error) {
+        console.error('Failed to show interstitial ad:', error);
+    }
+}
+
+// 보상형 광고 표시
+async function showRewardedAd() {
+    if (!AdMobAvailable) {
+        // 웹 환경에서는 광고 없이 바로 모드 전환
+        return true;
+    }
+
+    try {
+        const { AdMob } = Capacitor.Plugins;
+        const platform = Capacitor.getPlatform();
+        const adId = platform === 'ios' ? AdMobConfig.rewardedAdId.ios : AdMobConfig.rewardedAdId.android;
+
+        // 보상형 광고 준비
+        await AdMob.prepareRewardVideoAd({
+            adId: adId
+        });
+
+        // 보상형 광고 표시
+        const result = await AdMob.showRewardVideoAd();
+
+        // 보상 획득 여부 확인
+        if (result && result.rewarded) {
+            console.log('Rewarded ad completed');
+            return true;
+        } else {
+            console.log('Rewarded ad skipped');
+            return false;
+        }
+    } catch (error) {
+        console.error('Failed to show rewarded ad:', error);
+        // 광고 로드 실패 시에도 연습 모드 진입 허용
+        return true;
+    }
+}
 
 // 게임 상태 관리
 const gameState = {
@@ -2465,12 +2620,17 @@ function submitSolution() {
     }
 
     // 정답인 경우 - 3초 후 모달 제거
-    setTimeout(() => {
+    setTimeout(async () => {
         if (resultDiv && resultDiv.parentNode) {
             resultDiv.remove();
         }
-        // 싱글 플레이 모드에서는 다시하기 버튼 표시
+
+        // 싱글 플레이 모드에서는 전면 광고 표시 후 다시하기 버튼 표시
         if (gameState.mode === 'singleEasy' || gameState.mode === 'singleHard') {
+            // 전면 광고 표시
+            await showInterstitialAd();
+
+            // 광고 후 다시하기 버튼 표시
             showRestartButton();
         }
     }, 3000);
@@ -2840,8 +3000,21 @@ function setupEventListeners() {
     document.getElementById('askCoordinateBtn').addEventListener('click', askCoordinate);
     document.getElementById('copyDebugInfo').addEventListener('click', copyDebugInfo);
 
-    document.getElementById('gameMode').addEventListener('change', (e) => {
-        gameState.mode = e.target.value;
+    document.getElementById('gameMode').addEventListener('change', async (e) => {
+        const newMode = e.target.value;
+
+        // 연습 모드로 전환 시 보상형 광고 표시
+        if (newMode === 'practice') {
+            const rewardGranted = await showRewardedAd();
+            if (!rewardGranted) {
+                // 광고를 시청하지 않으면 모드 변경 취소
+                e.target.value = gameState.mode;
+                alert('연습 모드를 사용하려면 광고를 시청해주세요.');
+                return;
+            }
+        }
+
+        gameState.mode = newMode;
         updateGameModeUI();
 
         // 싱글 플레이로 전환 시 자동 설정
@@ -2941,7 +3114,14 @@ function updateGameVersion() {
 }
 
 // 페이지 로드 시 게임 시작
-window.addEventListener('DOMContentLoaded', initGame);
+window.addEventListener('DOMContentLoaded', () => {
+    initGame();
+
+    // AdMob 초기화 (Capacitor 환경에서만)
+    if (typeof Capacitor !== 'undefined') {
+        initializeAdMob();
+    }
+});
 
 // 화면 크기 변경 시 보드 다시 렌더링 (모바일 회전 등)
 let resizeTimer;

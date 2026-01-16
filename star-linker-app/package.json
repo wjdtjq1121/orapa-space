@@ -1,6 +1,6 @@
 {
   "name": "star-linker",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Star Linker - 우주 탐험 퍼즐 게임. 레이저로 숨겨진 행성을 찾는 논리 퍼즐 게임입니다.",
   "main": "index.html",
   "scripts": {
@@ -38,6 +38,7 @@
     "live-server": "^1.2.2"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.0.0-0",
     "@capacitor/android": "^6.0.0",
     "@capacitor/cli": "^6.0.0",
     "@capacitor/core": "^6.0.0",
